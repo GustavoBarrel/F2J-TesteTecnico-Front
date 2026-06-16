@@ -1,0 +1,109 @@
+---
+description: Diretrizes de UI/UX e arquitetura do ServiceHub Front
+alwaysApply: true
+---
+
+# ServiceHub — Diretrizes Front-end
+
+## Produto
+
+Central de serviços corporativa. Usuários fazem login e solicitam serviços entre setores da mesma empresa. Idioma: **pt-BR**. Tom: **formal e intuitivo**.
+
+## Design tokens
+
+### Cores (70-20-10)
+
+| Token | Hex | Uso |
+|-------|-----|-----|
+| `primary` | `#1e3a5f` | Azul escuro — sidebar, títulos, CTAs (~10%) |
+| `primary-light` | `#2d5a8e` | Hover de botões primários |
+| `secondary` | `#e8f0fe` | Azul claro — cards, seções (~20%) |
+| `surface` | `#ffffff` | Fundos principais (~70%) |
+| `accent` | `#2563eb` | Botões de aceitação/confirmação |
+| `danger` | `#dc2626` | Exclusão e ações destrutivas |
+| `text` | `#1a1a2e` | Texto principal |
+| `text-muted` | `#64748b` | Labels, placeholders |
+| `border` | `#e2e8f0` | Bordas de inputs e cards |
+
+### Tipografia
+
+- Fonte: **Inter** (Google Fonts)
+- `text-xs` 12px · `text-sm` 14px · `text-base` 16px · `text-lg` 18px · `text-xl` 20px · `text-2xl` 24px
+- Pesos: `font-normal` (400), `font-medium` (500), `font-semibold` (600)
+
+### Espaçamento
+
+- Grid base: **8px**
+- Border-radius botões/inputs: `rounded-lg` (8px)
+- Border-radius cards/modais: `rounded-xl` (12px)
+- Padding padrão de seção: `p-4` mobile · `p-6` desktop
+
+## Layout
+
+- **Mobile-first**, totalmente responsivo
+- Após login: **sidebar à esquerda** + **info do usuário no canto superior direito**
+- Sidebar colapsável em mobile (drawer)
+
+## Stack
+
+- Tailwind CSS v4
+- React Router
+- Lucide React (ícones)
+- Fetch nativo + Context para auth
+- Sem lib de forms obrigatória — validação manual antes do submit
+
+## API
+
+- Base: `http://localhost:3000/api` (proxy Vite em dev)
+- Swagger: `http://localhost:3000/docs`
+- Auth: JWT Bearer em `Authorization` header
+- Token em `localStorage` (`access_token`)
+- Login: `POST /api/auth/login` com `username` + `password`
+- Perfil: `GET /api/auth/profile`
+- 401 → redirecionar para login
+
+## Tratamento de erros
+
+```ts
+// ApiError shape do backend
+{ statusCode, error, message, fields?: Record<string, string[]> }
+```
+
+1. **`fields` com campo do form** → mensagem abaixo do input (`fields.password[0]`)
+2. **`fields` sem campo correspondente** → toast com a mensagem
+3. **409 Conflict** → mapear `fields` (email/username) ou toast
+4. **401/403/404/500** → toast com `message`
+5. **Validação client-side** antes do submit (required, email, min length)
+
+## Componentes obrigatórios
+
+- `Button` — arredondado: primary (azul), danger (vermelho), secondary
+- `Input`, `Select`, `Textarea` — estilizados, label + erro inline; campos obrigatórios com `*` vermelho
+- `Modal`, `ConfirmDeleteModal` — exclusão sempre com confirmação
+- `Toast` — feedback global de erros/sucesso
+- `Sidebar`, `Header`, `AppLayout`
+- Formulários com `isSubmitting` + botão disabled
+
+## Regras
+
+1. Componentização e reutilização são prioridade
+2. Interface **intuitiva** — navegação clara, labels descritivos, feedback imediato
+3. Paginação vem do backend (`{ data, meta: { page, limit, total, totalPages } }`)
+4. Exclusão sempre com modal de confirmação
+5. Nunca usar input/botão com estilo nativo do browser
+6. Campos obrigatórios em formulários devem exibir `*` vermelho no label
+
+## Estrutura de pastas
+
+```
+src/
+  components/ui/
+  components/layout/
+  features/auth/
+  features/users/
+  hooks/
+  services/
+  contexts/
+  types/
+  lib/
+```
