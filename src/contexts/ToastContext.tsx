@@ -28,15 +28,15 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   return (
     <ToastContext.Provider value={value}>
       {children}
-      <div className="pointer-events-none fixed right-4 top-4 z-50 flex w-full max-w-sm flex-col gap-2">
+      <div className="pointer-events-none fixed right-4 top-20 z-50 flex w-full max-w-sm flex-col gap-2">
         {toasts.map((toast) => (
           <div
             key={toast.id}
             className={[
-              'rounded-xl border px-4 py-3 text-sm shadow-lg',
+              'rounded-xl border px-4 py-3 text-sm font-medium shadow-lg',
               toast.type === 'error'
-                ? 'border-danger/20 bg-white text-danger'
-                : 'border-accent/20 bg-white text-primary',
+                ? 'border-danger/30 bg-danger text-white'
+                : 'border-accent/30 bg-accent text-white',
             ].join(' ')}
           >
             {toast.message}

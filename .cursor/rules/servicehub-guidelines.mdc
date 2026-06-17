@@ -84,6 +84,13 @@ Central de serviços corporativa. Usuários fazem login e solicitam serviços en
 - `Sidebar`, `Header`, `AppLayout`
 - Formulários com `isSubmitting` + botão disabled
 
+## Padrões de formulário
+
+- Campos booleanos simples (ex.: `isActive`, `isGlobalAdmin`) → componente `<Checkbox>` padrão
+- Checkboxes agrupados ficam em `<div className="flex flex-col gap-3 sm:flex-row sm:gap-6">`
+- Campos de permissão com explicação contextual → `PermissionCard` (toggle visual com ícone + descrição), **exclusivo para permissões complexas**
+- `isActive` **sempre** usa `<Checkbox>` — nunca `PermissionCard` nem toggle customizado
+
 ## Regras
 
 1. Componentização e reutilização são prioridade

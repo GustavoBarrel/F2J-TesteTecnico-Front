@@ -35,6 +35,6 @@ export function updateUser(id: string, payload: UpdateUserPayload): Promise<User
   return api<User>(`/users/${id}`, { method: 'PATCH', body: payload })
 }
 
-export function deactivateUser(id: string): Promise<User> {
-  return api<User>(`/users/${id}`, { method: 'DELETE' })
+export function toggleUserActive(id: string): Promise<User> {
+  return api<User>(`/users/${id}/toggle-active`, { method: 'PATCH' })
 }

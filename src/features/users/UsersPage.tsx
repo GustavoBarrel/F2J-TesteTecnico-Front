@@ -1,4 +1,4 @@
-import { Pencil, Plus, Search, Trash2 } from 'lucide-react'
+import { Pencil, Plus, PowerOff, Search, Zap } from 'lucide-react'
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import { isApiError } from '../../services/api'
 import * as userService from '../../services/userService'
@@ -34,9 +34,9 @@ export function UsersPage() {
   const [formMode, setFormMode] = useState<'create' | 'edit'>('create')
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
 
-  const [deleteOpen, setDeleteOpen] = useState(false)
-  const [userToDelete, setUserToDelete] = useState<User | null>(null)
-  const [isDeleting, setIsDeleting] = useState(false)
+  const [toggleOpen, setToggleOpen] = useState(false)
+  const [userToToggle, setUserToToggle] = useState<User | null>(null)
+  const [isToggling, setIsToggling] = useState(false)
 
   const loadUsers = useCallback(async () => {
     setIsLoading(true)
@@ -86,30 +86,31 @@ export function UsersPage() {
     setFormOpen(true)
   }
 
-  function openDelete(user: User) {
-    setUserToDelete(user)
-    setDeleteOpen(true)
+  function openToggle(user: User) {
+    setUserToToggle(user)
+    setToggleOpen(true)
   }
 
-  async function handleDelete() {
-    if (!userToDelete) return
+  async function handleToggle() {
+    if (!userToToggle) return
 
-    setIsDeleting(true)
+    setIsToggling(true)
 
     try {
-      await userService.deactivateUser(userToDelete.id)
-      showToast('Usuário desativado com sucesso.', 'success')
-      setDeleteOpen(false)
-      setUserToDelete(null)
+      await userService.toggleUserActive(userToToggle.id)
+      const action = userToToggle.isActive ? 'desativado' : 'ativado'
+      showToast(`Usuário ${action} com sucesso.`, 'success')
+      setToggleOpen(false)
+      setUserToToggle(null)
       void loadUsers()
     } catch (error) {
       if (isApiError(error)) {
         showToast(error.message)
       } else {
-        showToast('Não foi possível desativar o usuário.')
+        showToast('Não foi possível alterar o status do usuário.')
       }
     } finally {
-      setIsDeleting(false)
+      setIsToggling(false)
     }
   }
 
@@ -224,13 +225,14 @@ export function UsersPage() {
                           <span className="hidden sm:inline">Editar</span>
                         </Button>
                         <Button
-                          variant="danger"
-                          onClick={() => openDelete(user)}
-                          disabled={!user.isActive}
-                          aria-label={`Desativar ${user.username}`}
+                          variant={user.isActive ? 'danger' : 'secondary'}
+                          onClick={() => openToggle(user)}
+                          aria-label={`${user.isActive ? 'Desativar' : 'Ativar'} ${user.username}`}
                         >
-                          <Trash2 size={16} />
-                          <span className="hidden sm:inline">Desativar</span>
+                          {user.isActive ? <PowerOff size={16} /> : <Zap size={16} />}
+                          <span className="hidden sm:inline">
+                            {user.isActive ? 'Desativar' : 'Ativar'}
+                          </span>
                         </Button>
                       </div>
                     </td>
@@ -255,19 +257,21 @@ export function UsersPage() {
       />
 
       <ConfirmDeleteModal
-        open={deleteOpen}
-        title="Desativar usuário"
+        open={toggleOpen}
+        title={userToToggle?.isActive ? 'Desativar usuário' : 'Ativar usuário'}
         description={
-          userToDelete
-            ? `Deseja realmente desativar o usuário "${userToDelete.firstName} ${userToDelete.lastName}"? Ele não poderá mais acessar o sistema.`
+          userToToggle
+            ? userToToggle.isActive
+              ? `Deseja realmente desativar o usuário "${userToToggle.firstName} ${userToToggle.lastName}"? Ele não poderá mais acessar o sistema.`
+              : `Deseja realmente ativar o usuário "${userToToggle.firstName} ${userToToggle.lastName}"? Ele voltará a ter acesso ao sistema.`
             : undefined
         }
-        confirmLabel="Desativar"
-        isLoading={isDeleting}
-        onConfirm={() => void handleDelete()}
+        confirmLabel={userToToggle?.isActive ? 'Desativar' : 'Ativar'}
+        isLoading={isToggling}
+        onConfirm={() => void handleToggle()}
         onCancel={() => {
-          setDeleteOpen(false)
-          setUserToDelete(null)
+          setToggleOpen(false)
+          setUserToToggle(null)
         }}
       />
     </div>

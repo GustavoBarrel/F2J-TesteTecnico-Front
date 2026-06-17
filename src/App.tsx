@@ -6,6 +6,7 @@ import { AppLayout } from './components/layout/AppLayout'
 import { LoginPage } from './features/auth/LoginPage'
 import { HomePage } from './features/home/HomePage'
 import { UsersPage } from './features/users/UsersPage'
+import { SectorsPage } from './features/sectors/SectorsPage'
 
 export default function App() {
   return (
@@ -20,6 +21,7 @@ export default function App() {
             <Route path="/" element={<HomePage />} />
             <Route element={<AdminRoute />}>
               <Route path="/usuarios" element={<UsersPage />} />
+              <Route path="/setores" element={<SectorsPage />} />
             </Route>
           </Route>
         </Route>

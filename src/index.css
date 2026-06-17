@@ -1,6 +1,8 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
 @import 'tailwindcss';
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   --font-sans: 'Inter', system-ui, sans-serif;
 
@@ -15,6 +17,7 @@
   --color-text: #1a1a2e;
   --color-text-muted: #64748b;
   --color-border: #e2e8f0;
+  --color-sidebar: #1e3a5f;
 }
 
 body {
@@ -27,4 +30,20 @@ body {
 
 #root {
   min-height: 100dvh;
+}
+
+/* Dark mode */
+.dark {
+  --color-primary: #60a5fa;
+  --color-primary-light: #93c5fd;
+  --color-secondary: #1e2d40;
+  --color-surface: #111827;
+  --color-accent: #2563eb;
+  --color-accent-hover: #1d4ed8;
+  --color-danger: #ef4444;
+  --color-danger-hover: #dc2626;
+  --color-text: #e2e8f0;
+  --color-text-muted: #94a3b8;
+  --color-border: #2d3f55;
+  --color-sidebar: #0d1e30;
 }
