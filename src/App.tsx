@@ -7,6 +7,7 @@ import { LoginPage } from './features/auth/LoginPage'
 import { HomePage } from './features/home/HomePage'
 import { UsersPage } from './features/users/UsersPage'
 import { SectorsPage } from './features/sectors/SectorsPage'
+import { SectorServicesPage } from './features/sector-services/SectorServicesPage'
 
 export default function App() {
   return (
@@ -22,6 +23,7 @@ export default function App() {
             <Route element={<AdminRoute />}>
               <Route path="/usuarios" element={<UsersPage />} />
               <Route path="/setores" element={<SectorsPage />} />
+              <Route path="/setores/:sectorId/servicos" element={<SectorServicesPage />} />
             </Route>
           </Route>
         </Route>

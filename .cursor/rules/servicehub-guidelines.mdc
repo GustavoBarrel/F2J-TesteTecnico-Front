@@ -79,17 +79,19 @@ Central de serviços corporativa. Usuários fazem login e solicitam serviços en
 
 - `Button` — arredondado: primary (azul), danger (vermelho), secondary
 - `Input`, `Select`, `Textarea` — estilizados, label + erro inline; campos obrigatórios com `*` vermelho
-- `Modal`, `ConfirmDeleteModal` — exclusão sempre com confirmação
+- `ToggleCard` — toggles booleanos em formulários (`active`, `isActive`, `isGlobalAdmin`); ícone + label + descrição + switch
+- `PermissionCard` — permissões complexas com explicação longa (ex.: restrições de chamados do setor)
+- `Modal`, `ConfirmDeleteModal` — exclusão/desativação sempre com confirmação
 - `Toast` — feedback global de erros/sucesso
 - `Sidebar`, `Header`, `AppLayout`
 - Formulários com `isSubmitting` + botão disabled
 
 ## Padrões de formulário
 
-- Campos booleanos simples (ex.: `isActive`, `isGlobalAdmin`) → componente `<Checkbox>` padrão
-- Checkboxes agrupados ficam em `<div className="flex flex-col gap-3 sm:flex-row sm:gap-6">`
-- Campos de permissão com explicação contextual → `PermissionCard` (toggle visual com ícone + descrição), **exclusivo para permissões complexas**
-- `isActive` **sempre** usa `<Checkbox>` — nunca `PermissionCard` nem toggle customizado
+- Campos booleanos (`active`, `isActive`, `isGlobalAdmin`, etc.) → **sempre** `<ToggleCard>` com ícone, label e descrição
+- Agrupar toggles em `<div className="flex flex-col gap-3">`
+- Permissões complexas com contexto detalhado → `<PermissionCard>` (ex.: restrições de chamados do setor)
+- **Não** usar `<Checkbox>` nativo em formulários — reservado apenas se `ToggleCard` não se aplicar
 
 ## Regras
 

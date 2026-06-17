@@ -1,3 +1,4 @@
+import { CheckCircle2, Shield } from 'lucide-react'
 import { useEffect, useState, type FormEvent } from 'react'
 import { getFieldError, getUnknownFieldErrors, mapFieldErrors } from '../../lib/parseApiError'
 import { validateUserForm } from '../../lib/userValidators'
@@ -6,9 +7,9 @@ import * as userService from '../../services/userService'
 import type { UpdateUserPayload, User } from '../../types/user.types'
 import { useToast } from '../../contexts/ToastContext'
 import { Button } from '../../components/ui/Button'
-import { Checkbox } from '../../components/ui/Checkbox'
 import { Input } from '../../components/ui/Input'
 import { Modal } from '../../components/ui/Modal'
+import { ToggleCard } from '../../components/ui/ToggleCard'
 
 interface UserFormModalProps {
   open: boolean
@@ -217,20 +218,24 @@ export function UserFormModal({ open, mode, user, onClose, onSuccess }: UserForm
           />
         ) : null}
 
-        <div className="flex flex-col gap-3 sm:flex-row sm:gap-6">
-          <Checkbox
+        <div className="flex flex-col gap-3">
+          <ToggleCard
             name="isGlobalAdmin"
             label="Administrador global"
+            description="Permite acesso total ao sistema, incluindo gestão de usuários, setores e serviços."
+            icon={<Shield size={16} />}
             checked={form.isGlobalAdmin}
-            onChange={(event) => updateField('isGlobalAdmin', event.target.checked)}
             disabled={isSubmitting}
+            onChange={(isGlobalAdmin) => updateField('isGlobalAdmin', isGlobalAdmin)}
           />
-          <Checkbox
+          <ToggleCard
             name="isActive"
             label="Usuário ativo"
+            description="Usuários inativos não conseguem acessar o sistema."
+            icon={<CheckCircle2 size={16} />}
             checked={form.isActive}
-            onChange={(event) => updateField('isActive', event.target.checked)}
             disabled={isSubmitting}
+            onChange={(isActive) => updateField('isActive', isActive)}
           />
         </div>
 

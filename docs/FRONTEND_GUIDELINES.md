@@ -153,7 +153,9 @@ Submit → validação client → API
 
 - Botões sempre arredondados
 - Inputs sempre estilizados
-- Campos obrigatórios identificados com `*` vermelho no label
+- Campos booleanos em formulários (`active`, `isActive`, `isGlobalAdmin`) → sempre `ToggleCard` (ícone + label + descrição + switch)
+- Permissões complexas (ex.: chamados do setor) → `PermissionCard`
+- Não usar checkbox nativo em formulários
 - Exclusão sempre com modal de confirmação
 - Formulários com proteção contra double-submit
 - Interface intuitiva: labels claros, feedback imediato, navegação óbvia

@@ -1,4 +1,4 @@
-import { Archive, Eye, Info, Pencil } from 'lucide-react'
+import { Archive, CheckCircle2, Eye, Info, Pencil } from 'lucide-react'
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react'
 import { getFieldError, getUnknownFieldErrors, mapFieldErrors } from '../../lib/parseApiError'
 import { isApiError } from '../../services/api'
@@ -6,9 +6,9 @@ import * as sectorService from '../../services/sectorService'
 import type { Sector, UpdateSectorPayload } from '../../types/sector.types'
 import { useToast } from '../../contexts/ToastContext'
 import { Button } from '../../components/ui/Button'
-import { Checkbox } from '../../components/ui/Checkbox'
 import { Input } from '../../components/ui/Input'
 import { Modal } from '../../components/ui/Modal'
+import { ToggleCard } from '../../components/ui/ToggleCard'
 
 interface SectorFormModalProps {
   open: boolean
@@ -212,12 +212,14 @@ export function SectorFormModal({ open, mode, sector, onClose, onSuccess }: Sect
             disabled={isSubmitting}
           />
 
-          <Checkbox
+          <ToggleCard
             name="active"
             label="Setor ativo"
+            description="Setores inativos não aparecem na abertura de novos chamados."
+            icon={<CheckCircle2 size={16} />}
             checked={form.active}
-            onChange={(event) => updateField('active', event.target.checked)}
             disabled={isSubmitting}
+            onChange={(active) => updateField('active', active)}
           />
         </div>
 

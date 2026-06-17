@@ -1,5 +1,6 @@
-import { Archive, Eye, Pencil, Plus, PowerOff, Search, Zap } from 'lucide-react'
+import { Archive, Eye, Layers, Pencil, Plus, PowerOff, Search, Zap } from 'lucide-react'
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
+import { Link } from 'react-router-dom'
 import { isApiError } from '../../services/api'
 import * as sectorService from '../../services/sectorService'
 import type { Sector } from '../../types/sector.types'
@@ -256,6 +257,14 @@ export function SectorsPage() {
                       </td>
                       <td className="px-4 py-4 lg:px-5">
                         <div className="flex items-center justify-end gap-2">
+                          <Link
+                            to={`/setores/${sector.id}/servicos`}
+                            className="inline-flex items-center justify-center gap-2 rounded-lg bg-secondary px-4 py-2.5 text-sm font-medium text-primary transition-colors hover:bg-secondary/80"
+                            aria-label={`Serviços do setor ${sector.name}`}
+                          >
+                            <Layers size={16} />
+                            <span className="hidden sm:inline">Serviços</span>
+                          </Link>
                           <Button
                             variant="secondary"
                             onClick={() => openEdit(sector)}
