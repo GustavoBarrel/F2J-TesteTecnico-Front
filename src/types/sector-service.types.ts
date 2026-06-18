@@ -3,7 +3,7 @@ import type { PaginatedMeta } from './api.types'
 export interface SectorServiceItem {
   id: string
   name: string
-  active: boolean
+  isActive: boolean
   sectorId: string
   createdAt: string
   updatedAt: string
@@ -11,12 +11,12 @@ export interface SectorServiceItem {
 
 export interface CreateSectorServicePayload {
   name: string
-  active: boolean
+  isActive: boolean
 }
 
 export interface UpdateSectorServicePayload {
   name?: string
-  active?: boolean
+  isActive?: boolean
 }
 
 export interface SectorServicesQuery {

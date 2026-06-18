@@ -1,4 +1,4 @@
-import { Archive, Eye, Layers, Pencil, Plus, PowerOff, Search, Zap } from 'lucide-react'
+import { Archive, Building2, Eye, Layers, Pencil, Plus, PowerOff, Search, Users, Zap } from 'lucide-react'
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { isApiError } from '../../services/api'
@@ -12,6 +12,8 @@ import { Input } from '../../components/ui/Input'
 import { Pagination } from '../../components/ui/Pagination'
 import { Select } from '../../components/ui/Select'
 import { SectorFormModal } from './SectorFormModal'
+import { PageHeader } from '../../components/layout/PageHeader'
+import { sectorsBreadcrumbs } from '../../lib/breadcrumbs'
 
 const dateFormatter = new Intl.DateTimeFormat('pt-BR', {
   day: '2-digit',
@@ -118,7 +120,7 @@ export function SectorsPage() {
 
     try {
       await sectorService.toggleSectorActive(sectorToToggle.id)
-      const action = sectorToToggle.active ? 'desativado' : 'ativado'
+      const action = sectorToToggle.isActive ? 'desativado' : 'ativado'
       showToast(`Setor ${action} com sucesso.`, 'success')
       setToggleOpen(false)
       setSectorToToggle(null)
@@ -136,18 +138,18 @@ export function SectorsPage() {
 
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h2 className="text-xl font-semibold text-primary">Setores</h2>
-          <p className="mt-1 text-sm text-text-muted">
-            Gerencie os setores e suas permissões de acesso a chamados
-          </p>
-        </div>
-        <Button onClick={openCreate}>
-          <Plus size={16} />
-          Criar setor
-        </Button>
-      </div>
+      <PageHeader
+        breadcrumbs={sectorsBreadcrumbs}
+        icon={<Building2 size={20} />}
+        title="Setores"
+        description="Gerencie os setores e suas permissões de acesso a chamados"
+        actions={
+          <Button onClick={openCreate}>
+            <Plus size={16} />
+            Criar setor
+          </Button>
+        }
+      />
 
       <section className="rounded-xl border border-border bg-surface p-4 lg:p-5">
         <form
@@ -222,8 +224,8 @@ export function SectorsPage() {
                         {sector.name}
                       </td>
                       <td className="px-4 py-4 lg:px-5">
-                        <Badge variant={sector.active ? 'success' : 'warning'}>
-                          {sector.active ? 'Ativo' : 'Inativo'}
+                        <Badge variant={sector.isActive ? 'success' : 'warning'}>
+                          {sector.isActive ? 'Ativo' : 'Inativo'}
                         </Badge>
                       </td>
                       <td className="px-4 py-4 lg:px-5">
@@ -258,6 +260,14 @@ export function SectorsPage() {
                       <td className="px-4 py-4 lg:px-5">
                         <div className="flex items-center justify-end gap-2">
                           <Link
+                            to={`/setores/${sector.id}/membros`}
+                            className="inline-flex items-center justify-center gap-2 rounded-lg bg-secondary px-4 py-2.5 text-sm font-medium text-primary transition-colors hover:bg-secondary/80"
+                            aria-label={`Membros do setor ${sector.name}`}
+                          >
+                            <Users size={16} />
+                            <span className="hidden sm:inline">Membros</span>
+                          </Link>
+                          <Link
                             to={`/setores/${sector.id}/servicos`}
                             className="inline-flex items-center justify-center gap-2 rounded-lg bg-secondary px-4 py-2.5 text-sm font-medium text-primary transition-colors hover:bg-secondary/80"
                             aria-label={`Serviços do setor ${sector.name}`}
@@ -274,13 +284,13 @@ export function SectorsPage() {
                             <span className="hidden sm:inline">Editar</span>
                           </Button>
                           <Button
-                            variant={sector.active ? 'danger' : 'secondary'}
+                            variant={sector.isActive ? 'danger' : 'secondary'}
                             onClick={() => openToggle(sector)}
-                            aria-label={`${sector.active ? 'Desativar' : 'Ativar'} ${sector.name}`}
+                            aria-label={`${sector.isActive ? 'Desativar' : 'Ativar'} ${sector.name}`}
                           >
-                            {sector.active ? <PowerOff size={16} /> : <Zap size={16} />}
+                            {sector.isActive ? <PowerOff size={16} /> : <Zap size={16} />}
                             <span className="hidden sm:inline">
-                              {sector.active ? 'Desativar' : 'Ativar'}
+                              {sector.isActive ? 'Desativar' : 'Ativar'}
                             </span>
                           </Button>
                         </div>
@@ -308,15 +318,15 @@ export function SectorsPage() {
 
       <ConfirmDeleteModal
         open={toggleOpen}
-        title={sectorToToggle?.active ? 'Desativar setor' : 'Ativar setor'}
+        title={sectorToToggle?.isActive ? 'Desativar setor' : 'Ativar setor'}
         description={
           sectorToToggle
-            ? sectorToToggle.active
+            ? sectorToToggle.isActive
               ? `Deseja realmente desativar o setor "${sectorToToggle.name}"? Ele não aparecerá na criação de novos chamados.`
               : `Deseja realmente ativar o setor "${sectorToToggle.name}"? Ele voltará a aparecer na criação de chamados.`
             : undefined
         }
-        confirmLabel={sectorToToggle?.active ? 'Desativar' : 'Ativar'}
+        confirmLabel={sectorToToggle?.isActive ? 'Desativar' : 'Ativar'}
         isLoading={isToggling}
         onConfirm={() => void handleToggle()}
         onCancel={() => {

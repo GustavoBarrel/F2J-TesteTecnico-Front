@@ -1,4 +1,4 @@
-import { Pencil, Plus, PowerOff, Search, Zap } from 'lucide-react'
+import { Pencil, Plus, PowerOff, Search, Users, Zap } from 'lucide-react'
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import { isApiError } from '../../services/api'
 import * as userService from '../../services/userService'
@@ -11,6 +11,8 @@ import { Input } from '../../components/ui/Input'
 import { Pagination } from '../../components/ui/Pagination'
 import { Select } from '../../components/ui/Select'
 import { UserFormModal } from './UserFormModal'
+import { PageHeader } from '../../components/layout/PageHeader'
+import { usersBreadcrumbs } from '../../lib/breadcrumbs'
 
 const dateFormatter = new Intl.DateTimeFormat('pt-BR', {
   day: '2-digit',
@@ -116,18 +118,18 @@ export function UsersPage() {
 
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h2 className="text-xl font-semibold text-primary">Usuários</h2>
-          <p className="mt-1 text-sm text-text-muted">
-            Gerencie os usuários da central de serviços
-          </p>
-        </div>
-        <Button onClick={openCreate}>
-          <Plus size={16} />
-          Criar usuário
-        </Button>
-      </div>
+      <PageHeader
+        breadcrumbs={usersBreadcrumbs}
+        icon={<Users size={20} />}
+        title="Usuários"
+        description="Gerencie os usuários da central de serviços"
+        actions={
+          <Button onClick={openCreate}>
+            <Plus size={16} />
+            Criar usuário
+          </Button>
+        }
+      />
 
       <section className="rounded-xl border border-border bg-surface p-4 lg:p-5">
         <form

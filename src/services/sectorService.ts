@@ -1,6 +1,8 @@
 import { api } from './api'
 import type {
+  AvailableUsersQuery,
   CreateSectorPayload,
+  PaginatedAvailableUsers,
   PaginatedSectors,
   Sector,
   SectorsQuery,
@@ -37,4 +39,11 @@ export function updateSector(id: string, payload: UpdateSectorPayload): Promise<
 
 export function toggleSectorActive(id: string): Promise<Sector> {
   return api<Sector>(`/sectors/${id}/toggle-active`, { method: 'PATCH' })
+}
+
+export function getAvailableUsers(
+  sectorId: string,
+  params: AvailableUsersQuery = {},
+): Promise<PaginatedAvailableUsers> {
+  return api<PaginatedAvailableUsers>(`/sectors/${sectorId}/available-users${buildQuery(params)}`)
 }

@@ -1,9 +1,10 @@
 import type { PaginatedMeta } from './api.types'
+import type { PaginatedUsers, UsersQuery } from './user.types'
 
 export interface Sector {
   id: string
   name: string
-  active: boolean
+  isActive: boolean
   onlyManagerCanView: boolean
   onlyManagerCanEdit: boolean
   onlyManagerCanArchive: boolean
@@ -13,7 +14,7 @@ export interface Sector {
 
 export interface CreateSectorPayload {
   name: string
-  active: boolean
+  isActive: boolean
   onlyManagerCanView: boolean
   onlyManagerCanEdit: boolean
   onlyManagerCanArchive: boolean
@@ -21,7 +22,7 @@ export interface CreateSectorPayload {
 
 export interface UpdateSectorPayload {
   name?: string
-  active?: boolean
+  isActive?: boolean
   onlyManagerCanView?: boolean
   onlyManagerCanEdit?: boolean
   onlyManagerCanArchive?: boolean
@@ -38,3 +39,7 @@ export interface PaginatedSectors {
   data: Sector[]
   meta: PaginatedMeta
 }
+
+export type AvailableUsersQuery = UsersQuery
+
+export type PaginatedAvailableUsers = PaginatedUsers

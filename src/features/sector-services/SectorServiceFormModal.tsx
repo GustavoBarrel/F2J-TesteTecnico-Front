@@ -22,7 +22,7 @@ interface SectorServiceFormModalProps {
 
 const emptyForm = {
   name: '',
-  active: true,
+  isActive: true,
 }
 
 function validateForm(form: typeof emptyForm): Record<string, string> {
@@ -49,7 +49,7 @@ export function SectorServiceFormModal({
     if (!open) return
 
     if (mode === 'edit' && service) {
-      setForm({ name: service.name, active: service.active })
+      setForm({ name: service.name, isActive: service.isActive })
     } else {
       setForm(emptyForm)
     }
@@ -73,13 +73,13 @@ export function SectorServiceFormModal({
       if (mode === 'create') {
         await sectorServicesService.createSectorService(sectorId, {
           name: form.name.trim(),
-          active: form.active,
+          isActive: form.isActive,
         })
         showToast('Serviço do setor criado com sucesso.', 'success')
       } else if (service) {
         const payload: UpdateSectorServicePayload = {
           name: form.name.trim(),
-          active: form.active,
+          isActive: form.isActive,
         }
 
         await sectorServicesService.updateSectorService(sectorId, service.id, payload)
@@ -90,7 +90,7 @@ export function SectorServiceFormModal({
       onClose()
     } catch (error) {
       if (isApiError(error)) {
-        const knownFields = ['name', 'active']
+        const knownFields = ['name', 'isActive']
         setErrors(mapFieldErrors(error.fields))
 
         const unknownErrors = getUnknownFieldErrors(error.fields, knownFields)
@@ -135,13 +135,13 @@ export function SectorServiceFormModal({
         />
 
         <ToggleCard
-          name="active"
+          name="isActive"
           label="Serviço ativo"
           description="Serviços inativos não aparecem como categoria na abertura de novos chamados."
           icon={<CheckCircle2 size={16} />}
-          checked={form.active}
+          checked={form.isActive}
           disabled={isSubmitting}
-          onChange={(active) => setForm((current) => ({ ...current, active }))}
+          onChange={(isActive) => setForm((current) => ({ ...current, isActive }))}
         />
 
         <div className="flex flex-col-reverse gap-2 border-t border-border pt-4 sm:flex-row sm:justify-end">

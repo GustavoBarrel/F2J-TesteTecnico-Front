@@ -1,6 +1,6 @@
-import { ArrowLeft, Layers, Pencil, Plus, PowerOff, Search, Zap } from 'lucide-react'
+import { Layers, Pencil, Plus, PowerOff, Search, Zap } from 'lucide-react'
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { useParams } from 'react-router-dom'
 import { isApiError } from '../../services/api'
 import * as sectorService from '../../services/sectorService'
 import * as sectorServicesService from '../../services/sectorServicesService'
@@ -13,6 +13,8 @@ import { Input } from '../../components/ui/Input'
 import { Pagination } from '../../components/ui/Pagination'
 import { Select } from '../../components/ui/Select'
 import { SectorServiceFormModal } from './SectorServiceFormModal'
+import { PageHeader } from '../../components/layout/PageHeader'
+import { sectorServicesBreadcrumbs } from '../../lib/breadcrumbs'
 
 const dateFormatter = new Intl.DateTimeFormat('pt-BR', {
   day: '2-digit',
@@ -118,7 +120,7 @@ export function SectorServicesPage() {
 
     try {
       await sectorServicesService.toggleSectorServiceActive(sectorId, serviceToToggle.id)
-      const action = serviceToToggle.active ? 'desativada' : 'ativada'
+      const action = serviceToToggle.isActive ? 'desativada' : 'ativada'
       showToast(`Serviço ${action} com sucesso.`, 'success')
       setToggleOpen(false)
       setServiceToToggle(null)
@@ -136,38 +138,24 @@ export function SectorServicesPage() {
 
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-6">
-      <Link
-        to="/setores"
-        className="inline-flex w-fit items-center gap-1.5 text-sm text-text-muted transition-colors hover:text-primary"
-      >
-        <ArrowLeft size={16} />
-        Voltar para setores
-      </Link>
-
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
-            <div className="rounded-lg bg-secondary p-2 text-primary">
-              <Layers size={20} />
-            </div>
-            <div>
-              <h2 className="text-xl font-semibold text-primary">Serviços do setor</h2>
-              <p className="text-sm text-text-muted">
-                Setor: <span className="font-medium text-text">{sectorName || '...'}</span>
-              </p>
-            </div>
-          </div>
-          <p className="mt-3 text-sm text-text-muted">
+      <PageHeader
+        breadcrumbs={sectorServicesBreadcrumbs(sectorName)}
+        icon={<Layers size={20} />}
+        title="Serviços do setor"
+        description={
+          <>
             Cada serviço cadastrado abaixo será uma{' '}
             <strong className="text-text">categoria de chamado</strong> vinculada a este setor —
             por exemplo, &quot;Manutenção de computador&quot; no setor de TI.
-          </p>
-        </div>
-        <Button onClick={openCreate} className="shrink-0 whitespace-nowrap self-start sm:self-center">
-          <Plus size={16} className="shrink-0" />
-          Novo serviço
-        </Button>
-      </div>
+          </>
+        }
+        actions={
+          <Button onClick={openCreate} className="whitespace-nowrap">
+            <Plus size={16} className="shrink-0" />
+            Novo serviço
+          </Button>
+        }
+      />
 
       <section className="rounded-xl border border-border bg-surface p-4 lg:p-5">
         <form
@@ -233,8 +221,8 @@ export function SectorServicesPage() {
                   <tr key={service.id} className="border-t border-border">
                     <td className="px-4 py-4 font-medium text-text lg:px-5">{service.name}</td>
                     <td className="px-4 py-4 lg:px-5">
-                      <Badge variant={service.active ? 'success' : 'warning'}>
-                        {service.active ? 'Ativo' : 'Inativo'}
+                      <Badge variant={service.isActive ? 'success' : 'warning'}>
+                        {service.isActive ? 'Ativo' : 'Inativo'}
                       </Badge>
                     </td>
                     <td className="px-4 py-4 text-text-muted lg:px-5">
@@ -251,13 +239,13 @@ export function SectorServicesPage() {
                           <span className="hidden sm:inline">Editar</span>
                         </Button>
                         <Button
-                          variant={service.active ? 'danger' : 'secondary'}
+                          variant={service.isActive ? 'danger' : 'secondary'}
                           onClick={() => openToggle(service)}
-                          aria-label={`${service.active ? 'Desativar' : 'Ativar'} ${service.name}`}
+                          aria-label={`${service.isActive ? 'Desativar' : 'Ativar'} ${service.name}`}
                         >
-                          {service.active ? <PowerOff size={16} /> : <Zap size={16} />}
+                          {service.isActive ? <PowerOff size={16} /> : <Zap size={16} />}
                           <span className="hidden sm:inline">
-                            {service.active ? 'Desativar' : 'Ativar'}
+                            {service.isActive ? 'Desativar' : 'Ativar'}
                           </span>
                         </Button>
                       </div>
@@ -286,15 +274,15 @@ export function SectorServicesPage() {
 
       <ConfirmDeleteModal
         open={toggleOpen}
-        title={serviceToToggle?.active ? 'Desativar serviço' : 'Ativar serviço'}
+        title={serviceToToggle?.isActive ? 'Desativar serviço' : 'Ativar serviço'}
         description={
           serviceToToggle
-            ? serviceToToggle.active
+            ? serviceToToggle.isActive
               ? `Deseja desativar o serviço "${serviceToToggle.name}"? Ele não aparecerá como categoria na abertura de novos chamados.`
               : `Deseja ativar o serviço "${serviceToToggle.name}"? Ele voltará a aparecer como categoria na abertura de chamados.`
             : undefined
         }
-        confirmLabel={serviceToToggle?.active ? 'Desativar' : 'Ativar'}
+        confirmLabel={serviceToToggle?.isActive ? 'Desativar' : 'Ativar'}
         isLoading={isToggling}
         onConfirm={() => void handleToggle()}
         onCancel={() => {

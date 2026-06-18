@@ -20,7 +20,7 @@ interface SectorFormModalProps {
 
 const emptyForm = {
   name: '',
-  active: true,
+  isActive: true,
   onlyManagerCanView: false,
   onlyManagerCanEdit: false,
   onlyManagerCanArchive: false,
@@ -107,7 +107,7 @@ export function SectorFormModal({ open, mode, sector, onClose, onSuccess }: Sect
     if (mode === 'edit' && sector) {
       setForm({
         name: sector.name,
-        active: sector.active,
+        isActive: sector.isActive,
         onlyManagerCanView: sector.onlyManagerCanView,
         onlyManagerCanEdit: sector.onlyManagerCanEdit,
         onlyManagerCanArchive: sector.onlyManagerCanArchive,
@@ -139,7 +139,7 @@ export function SectorFormModal({ open, mode, sector, onClose, onSuccess }: Sect
       if (mode === 'create') {
         await sectorService.createSector({
           name: form.name.trim(),
-          active: form.active,
+          isActive: form.isActive,
           onlyManagerCanView: form.onlyManagerCanView,
           onlyManagerCanEdit: form.onlyManagerCanEdit,
           onlyManagerCanArchive: form.onlyManagerCanArchive,
@@ -148,7 +148,7 @@ export function SectorFormModal({ open, mode, sector, onClose, onSuccess }: Sect
       } else if (sector) {
         const payload: UpdateSectorPayload = {
           name: form.name.trim(),
-          active: form.active,
+          isActive: form.isActive,
           onlyManagerCanView: form.onlyManagerCanView,
           onlyManagerCanEdit: form.onlyManagerCanEdit,
           onlyManagerCanArchive: form.onlyManagerCanArchive,
@@ -213,13 +213,13 @@ export function SectorFormModal({ open, mode, sector, onClose, onSuccess }: Sect
           />
 
           <ToggleCard
-            name="active"
+            name="isActive"
             label="Setor ativo"
             description="Setores inativos não aparecem na abertura de novos chamados."
             icon={<CheckCircle2 size={16} />}
-            checked={form.active}
+            checked={form.isActive}
             disabled={isSubmitting}
-            onChange={(active) => updateField('active', active)}
+            onChange={(isActive) => updateField('isActive', isActive)}
           />
         </div>
 

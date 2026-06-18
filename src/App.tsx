@@ -7,6 +7,8 @@ import { LoginPage } from './features/auth/LoginPage'
 import { HomePage } from './features/home/HomePage'
 import { UsersPage } from './features/users/UsersPage'
 import { SectorsPage } from './features/sectors/SectorsPage'
+import { SectorMembersPage } from './features/sector-members/SectorMembersPage'
+import { LinkSectorMemberPage } from './features/sector-members/LinkSectorMemberPage'
 import { SectorServicesPage } from './features/sector-services/SectorServicesPage'
 
 export default function App() {
@@ -24,6 +26,8 @@ export default function App() {
               <Route path="/usuarios" element={<UsersPage />} />
               <Route path="/setores" element={<SectorsPage />} />
               <Route path="/setores/:sectorId/servicos" element={<SectorServicesPage />} />
+              <Route path="/setores/:sectorId/membros" element={<SectorMembersPage />} />
+              <Route path="/setores/:sectorId/membros/vincular" element={<LinkSectorMemberPage />} />
             </Route>
           </Route>
         </Route>
