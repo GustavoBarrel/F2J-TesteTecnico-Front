@@ -8,13 +8,13 @@ export function Header() {
   const { isDark, toggle } = useDarkMode()
 
   return (
-    <header className="flex items-center justify-between border-b border-border bg-surface px-4 py-4 lg:px-6">
-      <div className="pl-12 lg:pl-0">
-        <h1 className="text-lg font-semibold text-primary">Central de Serviços</h1>
-        <p className="text-sm text-text-muted">Gerencie solicitações entre setores</p>
+    <header className="flex items-center justify-between border-b border-border bg-surface px-4 py-3 xl:px-6 xl:py-4">
+      <div className="min-w-0 pl-12 xl:pl-0">
+        <h1 className="truncate text-base font-semibold text-primary xl:text-lg">Central de Serviços</h1>
+        <p className="hidden truncate text-sm text-text-muted sm:block">Gerencie solicitações entre setores</p>
       </div>
 
-      <div className="flex items-center gap-2 lg:gap-4">
+      <div className="flex shrink-0 items-center gap-2 xl:gap-4">
         <button
           type="button"
           onClick={toggle}
@@ -24,7 +24,7 @@ export function Header() {
           {isDark ? <Sun size={18} /> : <Moon size={18} />}
         </button>
 
-        <div className="hidden items-center gap-4 lg:flex">
+        <div className="hidden items-center gap-4 xl:flex">
           <div className="text-right">
             <p className="text-sm font-medium text-text">{user?.username}</p>
             <p className="text-xs text-text-muted">{user?.email}</p>

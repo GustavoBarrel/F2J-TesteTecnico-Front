@@ -1,4 +1,4 @@
-import { Building2, Home, LogOut, Menu, Moon, Sun, Users, X } from 'lucide-react'
+import { Building2, ClipboardList, Home, LogOut, Menu, Moon, Sun, Users, X } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { NavLink } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
@@ -14,6 +14,7 @@ export function Sidebar() {
   const navItems = useMemo(
     () => [
       { to: '/', label: 'Início', icon: Home, end: true },
+      { to: '/solicitacoes', label: 'Solicitações', icon: ClipboardList, end: false },
       ...(user?.isGlobalAdmin
         ? [
             { to: '/usuarios', label: 'Usuários', icon: Users, end: false },
@@ -28,7 +29,7 @@ export function Sidebar() {
     <>
       <button
         type="button"
-        className="fixed left-4 top-4 z-40 rounded-lg bg-sidebar p-2 text-white lg:hidden"
+        className="fixed left-4 top-4 z-40 rounded-lg bg-sidebar p-2 text-white xl:hidden"
         onClick={() => setOpen(true)}
         aria-label="Abrir menu"
       >
@@ -38,7 +39,7 @@ export function Sidebar() {
       {open ? (
         <button
           type="button"
-          className="fixed inset-0 z-40 bg-black/40 lg:hidden"
+          className="fixed inset-0 z-40 bg-black/40 xl:hidden"
           onClick={() => setOpen(false)}
           aria-label="Fechar menu"
         />
@@ -46,21 +47,21 @@ export function Sidebar() {
 
       <aside
         className={[
-          'fixed inset-y-0 left-0 z-50 flex w-72 flex-col bg-sidebar text-white transition-transform lg:static lg:translate-x-0',
+          'fixed inset-y-0 left-0 z-50 flex w-56 max-w-[72vw] flex-col bg-sidebar text-white shadow-xl transition-transform xl:static xl:w-52 xl:max-w-none xl:translate-x-0 xl:shadow-none',
           open ? 'translate-x-0' : '-translate-x-full',
         ].join(' ')}
       >
-        <div className="flex items-center justify-between border-b border-white/10 p-4">
-          <div className="flex items-center gap-3">
-            <LogoPlaceholder className="h-10 w-10" />
+        <div className="flex items-center justify-between border-b border-white/10 p-3 xl:p-4">
+          <div className="flex items-center gap-2.5 xl:gap-3">
+            <LogoPlaceholder className="h-8 w-8 xl:h-9 xl:w-9" />
             <div className="text-left">
-              <p className="text-sm font-semibold">ServiceHub</p>
-              <p className="text-xs text-white/70">Central de Serviços</p>
+              <p className="text-sm font-semibold leading-tight">ServiceHub</p>
+              <p className="hidden text-xs text-white/70 sm:block">Central de Serviços</p>
             </div>
           </div>
           <button
             type="button"
-            className="rounded-lg p-1 hover:bg-white/10 lg:hidden"
+            className="rounded-lg p-1 hover:bg-white/10 xl:hidden"
             onClick={() => setOpen(false)}
             aria-label="Fechar menu"
           >
@@ -68,7 +69,7 @@ export function Sidebar() {
           </button>
         </div>
 
-        <nav className="flex flex-1 flex-col gap-1 p-4">
+        <nav className="flex flex-1 flex-col gap-0.5 p-3 xl:gap-1 xl:p-4">
           {navItems.map(({ to, label, icon: Icon, end }) => (
             <NavLink
               key={to}
@@ -77,7 +78,7 @@ export function Sidebar() {
               onClick={() => setOpen(false)}
               className={({ isActive }) =>
                 [
-                  'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
+                  'flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-medium transition-colors xl:gap-3 xl:px-3 xl:py-2.5',
                   isActive ? 'bg-white/15 text-white' : 'text-white/80 hover:bg-white/10 hover:text-white',
                 ].join(' ')
               }
@@ -88,7 +89,7 @@ export function Sidebar() {
           ))}
         </nav>
 
-        <div className="border-t border-white/10 p-4 lg:hidden">
+        <div className="border-t border-white/10 p-3 xl:hidden">
           <p className="mb-1 text-sm font-medium">{user?.username}</p>
           <p className="mb-3 text-xs text-white/70">{user?.email}</p>
           <div className="flex flex-col gap-2">

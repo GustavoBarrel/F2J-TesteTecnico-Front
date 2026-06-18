@@ -5,6 +5,7 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   error?: string
   hint?: string
   required?: boolean
+  hideLabel?: boolean
 }
 
 export function Input({
@@ -12,6 +13,7 @@ export function Input({
   error,
   hint,
   required = false,
+  hideLabel = false,
   id,
   className = '',
   ...props
@@ -20,7 +22,10 @@ export function Input({
 
   return (
     <div className="flex w-full flex-col gap-1.5 text-left">
-      <label htmlFor={inputId} className="text-sm font-medium text-text">
+      <label
+        htmlFor={inputId}
+        className={hideLabel ? 'sr-only' : 'text-sm font-medium text-text'}
+      >
         {label}
         {required ? <span className="text-danger"> *</span> : null}
       </label>
