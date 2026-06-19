@@ -41,41 +41,25 @@ export function linkSectorMemberBreadcrumbs(
   ]
 }
 
-export const requestsHubBreadcrumbs: BreadcrumbItem[] = [
-  homeBreadcrumb,
-  { label: 'Solicitações' },
-]
-
 export const myRequestsBreadcrumbs: BreadcrumbItem[] = [
   homeBreadcrumb,
-  { label: 'Solicitações', to: '/solicitacoes' },
   { label: 'Minhas solicitações' },
 ]
 
 export const assignedRequestsBreadcrumbs: BreadcrumbItem[] = [
   homeBreadcrumb,
-  { label: 'Solicitações', to: '/solicitacoes' },
   { label: 'Atribuídas a mim' },
 ]
 
 export const newRequestBreadcrumbs: BreadcrumbItem[] = [
   homeBreadcrumb,
-  { label: 'Solicitações', to: '/solicitacoes' },
   { label: 'Nova solicitação' },
 ]
 
 export function sectorRequestsBreadcrumbs(sectorName: string): BreadcrumbItem[] {
-  return [
-    homeBreadcrumb,
-    { label: 'Solicitações', to: '/solicitacoes' },
-    { label: sectorName || '...' },
-  ]
+  return [homeBreadcrumb, { label: sectorName || '...' }]
 }
 
 export function requestDetailBreadcrumbs(title: string): BreadcrumbItem[] {
-  return [
-    homeBreadcrumb,
-    { label: 'Solicitações', to: '/solicitacoes' },
-    { label: title || '...' },
-  ]
+  return [homeBreadcrumb, { label: title || '...' }]
 }

@@ -7,11 +7,9 @@ import { Input } from '../../components/ui/Input'
 import { Select } from '../../components/ui/Select'
 import { isApiError } from '../../services/api'
 import * as requestService from '../../services/requestService'
-import * as meService from '../../services/meService'
-import * as sectorServicesService from '../../services/sectorServicesService'
 import { useToast } from '../../contexts/ToastContext'
-import { useAuth } from '../../contexts/AuthContext'
 import { newRequestBreadcrumbs } from '../../lib/breadcrumbs'
+import { ObserverPicker } from './ObserverPicker'
 import type { SectorWithServicesOption } from '../../types/request.types'
 
 interface FormErrors {
@@ -24,7 +22,6 @@ interface FormErrors {
 export function NewRequestPage() {
   const navigate = useNavigate()
   const { showToast } = useToast()
-  const { user } = useAuth()
 
   const [sectorsWithServices, setSectorsWithServices] = useState<
     SectorWithServicesOption[]
@@ -35,6 +32,7 @@ export function NewRequestPage() {
   const [sectorServiceId, setSectorServiceId] = useState('')
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
+  const [observerIds, setObserverIds] = useState<string[]>([])
   const [errors, setErrors] = useState<FormErrors>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -42,43 +40,13 @@ export function NewRequestPage() {
     async function loadOptions() {
       setIsLoadingOptions(true)
       try {
-        if (user?.isGlobalAdmin) {
-          const data = await requestService.getSectorServicesOptions()
-          setSectorsWithServices(
-            data.map((s) => ({
-              ...s,
-              sectorServices: s.sectorServices.filter((sv) => sv.isActive),
-            })),
-          )
-        } else {
-          const mySectors = await meService.getMySectors()
-          const results: SectorWithServicesOption[] = []
-          await Promise.all(
-            mySectors.map(async (sector) => {
-              try {
-                const res = await sectorServicesService.getSectorServices(
-                  sector.id,
-                  { isActive: true, limit: 50 },
-                )
-                if (res.data.length > 0) {
-                  results.push({
-                    id: sector.id,
-                    name: sector.name,
-                    sectorServices: res.data.map((sv) => ({
-                      id: sv.id,
-                      name: sv.name,
-                      isActive: sv.isActive,
-                      sectorId: sv.sectorId,
-                    })),
-                  })
-                }
-              } catch {
-                // sector without accessible services
-              }
-            }),
-          )
-          setSectorsWithServices(results)
-        }
+        const data = await requestService.getSectorServicesOptions()
+        setSectorsWithServices(
+          data.map((s) => ({
+            ...s,
+            sectorServices: s.sectorServices.filter((sv) => sv.isActive),
+          })),
+        )
       } catch (err) {
         if (isApiError(err)) showToast(err.message)
       } finally {
@@ -86,7 +54,7 @@ export function NewRequestPage() {
       }
     }
     void loadOptions()
-  }, [user?.isGlobalAdmin, showToast])
+  }, [showToast])
 
   const sectorOptions = useMemo(
     () => [
@@ -126,6 +94,7 @@ export function NewRequestPage() {
         title: title.trim(),
         description: description.trim(),
         sectorServiceId,
+        ...(observerIds.length > 0 ? { observerIds } : {}),
       })
       showToast('Solicitação criada com sucesso!', 'success')
       navigate(`/solicitacoes/${req.id}`)
@@ -155,7 +124,7 @@ export function NewRequestPage() {
         breadcrumbs={newRequestBreadcrumbs}
         icon={<ClipboardList size={20} />}
         title="Nova solicitação"
-        description="Preencha os dados abaixo para abrir uma solicitação a um setor."
+        description="Preencha os dados abaixo para abrir uma solicitação a um setor. Você pode incluir observadores opcionalmente."
       />
 
       <section className="rounded-xl border border-border bg-surface p-5">
@@ -239,11 +208,13 @@ export function NewRequestPage() {
               ) : null}
             </div>
 
+            <ObserverPicker value={observerIds} onChange={setObserverIds} />
+
             <div className="flex justify-end gap-3 border-t border-border pt-4">
               <Button
                 type="button"
                 variant="secondary"
-                onClick={() => navigate('/solicitacoes')}
+                onClick={() => navigate('/')}
               >
                 Cancelar
               </Button>

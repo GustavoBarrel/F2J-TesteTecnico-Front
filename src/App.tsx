@@ -10,7 +10,6 @@ import { SectorsPage } from './features/sectors/SectorsPage'
 import { SectorMembersPage } from './features/sector-members/SectorMembersPage'
 import { LinkSectorMemberPage } from './features/sector-members/LinkSectorMemberPage'
 import { SectorServicesPage } from './features/sector-services/SectorServicesPage'
-import { RequestsHubPage } from './features/requests/RequestsHubPage'
 import { MyRequestsPage } from './features/requests/MyRequestsPage'
 import { AssignedRequestsPage } from './features/requests/AssignedRequestsPage'
 import { NewRequestPage } from './features/requests/NewRequestPage'
@@ -29,7 +28,7 @@ export default function App() {
           <Route element={<AppLayout />}>
             <Route path="/" element={<HomePage />} />
 
-            <Route path="/solicitacoes" element={<RequestsHubPage />} />
+            <Route path="/solicitacoes" element={<Navigate to="/" replace />} />
             <Route path="/solicitacoes/nova" element={<NewRequestPage />} />
             <Route path="/solicitacoes/minhas" element={<MyRequestsPage />} />
             <Route path="/solicitacoes/atribuidas" element={<AssignedRequestsPage />} />

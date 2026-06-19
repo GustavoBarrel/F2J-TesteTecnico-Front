@@ -5,10 +5,12 @@ import type {
   CreateRequestPayload,
   PaginatedRequests,
   Request,
+  RequestDetail,
   RequestHistoryEntry,
   RequestMessage,
   RequestsQuery,
   SectorMemberOption,
+  ObserverOption,
   SectorRequestsQuery,
   SectorWithServicesOption,
   UpdateRequestPayload,
@@ -46,8 +48,8 @@ export function getSectorRequests(
   )
 }
 
-export function getRequest(id: string): Promise<Request> {
-  return api<Request>(`/requests/${id}`)
+export function getRequest(id: string): Promise<RequestDetail> {
+  return api<RequestDetail>(`/requests/${id}`)
 }
 
 export function createRequest(payload: CreateRequestPayload): Promise<Request> {
@@ -112,8 +114,10 @@ export function getSectorServicesOptions(): Promise<SectorWithServicesOption[]> 
   return api<SectorWithServicesOption[]>('/sectors/services/options')
 }
 
-export function getSectorMembersOptions(
-  sectorId: string,
-): Promise<SectorMemberOption[]> {
-  return api<SectorMemberOption[]>(`/sectors/${sectorId}/members/options`)
+export function getAssigneeOptions(sectorId: string): Promise<SectorMemberOption[]> {
+  return api<SectorMemberOption[]>(`/sectors/${sectorId}/assignee-options`)
+}
+
+export function getObserverOptions(search?: string): Promise<ObserverOption[]> {
+  return api<ObserverOption[]>(`/requests/observer-options${buildQuery({ search })}`)
 }

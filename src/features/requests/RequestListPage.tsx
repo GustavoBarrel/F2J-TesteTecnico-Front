@@ -5,10 +5,20 @@ import { PageHeader } from '../../components/layout/PageHeader'
 import { Pagination } from '../../components/ui/Pagination'
 import { Select } from '../../components/ui/Select'
 import { isApiError } from '../../services/api'
+import { useAuth } from '../../contexts/AuthContext'
 import { useToast } from '../../contexts/ToastContext'
 import type { BreadcrumbItem } from '../../components/layout/Breadcrumbs'
-import type { PaginatedRequests, Request, RequestStatus } from '../../types/request.types'
-import { RequestPriorityBadge, RequestStatusBadge } from './RequestBadges'
+import {
+  getRequestParticipationRoles,
+  type PaginatedRequests,
+  type Request,
+  type RequestStatus,
+} from '../../types/request.types'
+import {
+  RequestParticipationBadges,
+  RequestPriorityBadge,
+  RequestStatusBadge,
+} from './RequestBadges'
 
 const STATUS_OPTIONS = [
   { value: '', label: 'Todos os status' },
@@ -35,6 +45,7 @@ interface RequestListPageProps {
     limit: number
     status?: RequestStatus
   }) => Promise<PaginatedRequests>
+  showParticipation?: boolean
 }
 
 export function RequestListPage({
@@ -42,7 +53,9 @@ export function RequestListPage({
   title,
   description,
   fetchRequests,
+  showParticipation = false,
 }: RequestListPageProps) {
+  const { user } = useAuth()
   const { showToast } = useToast()
   const [requests, setRequests] = useState<Request[]>([])
   const [page, setPage] = useState(1)
@@ -113,6 +126,9 @@ export function RequestListPage({
               <thead>
                 <tr className="border-b border-border text-left text-text-muted">
                   <th className="px-4 py-3 font-medium">Título</th>
+                  {showParticipation ? (
+                    <th className="px-4 py-3 font-medium">Participação</th>
+                  ) : null}
                   <th className="px-4 py-3 font-medium">Status</th>
                   <th className="px-4 py-3 font-medium">Prioridade</th>
                   <th className="px-4 py-3 font-medium">Criada em</th>
@@ -132,6 +148,13 @@ export function RequestListPage({
                         {req.title}
                       </Link>
                     </td>
+                    {showParticipation && user ? (
+                      <td className="px-4 py-4">
+                        <RequestParticipationBadges
+                          roles={getRequestParticipationRoles(req, user.sub)}
+                        />
+                      </td>
+                    ) : null}
                     <td className="px-4 py-4">
                       <RequestStatusBadge status={req.status} />
                     </td>

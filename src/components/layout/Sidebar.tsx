@@ -1,4 +1,4 @@
-import { Building2, ClipboardList, Home, LogOut, Menu, Moon, Sun, Users, X } from 'lucide-react'
+import { Building2, Home, LogOut, Menu, Moon, Sun, Users, X } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { NavLink } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
@@ -14,7 +14,6 @@ export function Sidebar() {
   const navItems = useMemo(
     () => [
       { to: '/', label: 'Início', icon: Home, end: true },
-      { to: '/solicitacoes', label: 'Solicitações', icon: ClipboardList, end: false },
       ...(user?.isGlobalAdmin
         ? [
             { to: '/usuarios', label: 'Usuários', icon: Users, end: false },

@@ -38,9 +38,9 @@ import {
   type RequestMessage,
   type RequestPriority,
   type RequestStatus,
-  type SectorMemberOption,
 } from '../../types/request.types'
 import { RequestPriorityBadge, RequestStatusBadge } from './RequestBadges'
+import { ObserverPicker } from './ObserverPicker'
 
 const CHANGE_STATUS_OPTIONS: { value: ChangeStatusPayload['status']; label: string }[] = [
   { value: 'PENDING', label: 'Pendente' },
@@ -150,22 +150,51 @@ interface AssignModalProps {
   onSaved: (r: Request) => void
 }
 
+interface UserOptionRow {
+  id: string
+  firstName: string
+  lastName: string
+  email: string
+  roleName?: string
+}
+
 function AssignModal({ requestId, sectorId, current, mode, onClose, onSaved }: AssignModalProps) {
   const { showToast } = useToast()
-  const [members, setMembers] = useState<SectorMemberOption[]>([])
-  const [selected, setSelected] = useState<Set<string>>(new Set(current.map((c) => c.id)))
-  const [isLoading, setIsLoading] = useState(true)
+  const [assigneeOptions, setAssigneeOptions] = useState<UserOptionRow[]>([])
+  const [selectedAssignees, setSelectedAssignees] = useState<Set<string>>(
+    () => new Set(current.map((c) => c.id)),
+  )
+  const [selectedObservers, setSelectedObservers] = useState<string[]>(
+    () => current.map((c) => c.id),
+  )
+  const [isLoadingAssignees, setIsLoadingAssignees] = useState(mode === 'assignees')
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   useEffect(() => {
-    requestService.getSectorMembersOptions(sectorId)
-      .then(setMembers)
-      .catch((err) => { if (isApiError(err)) showToast(err.message) })
-      .finally(() => setIsLoading(false))
-  }, [sectorId, showToast])
+    if (mode !== 'assignees') return
 
-  function toggle(id: string) {
-    setSelected((prev) => {
+    setIsLoadingAssignees(true)
+    requestService
+      .getAssigneeOptions(sectorId)
+      .then((members) =>
+        setAssigneeOptions(
+          members.map((m) => ({
+            id: m.id,
+            firstName: m.firstName,
+            lastName: m.lastName,
+            email: m.email,
+            roleName: m.role.name,
+          })),
+        ),
+      )
+      .catch((err) => {
+        if (isApiError(err)) showToast(err.message)
+      })
+      .finally(() => setIsLoadingAssignees(false))
+  }, [mode, sectorId, showToast])
+
+  function toggleAssignee(id: string) {
+    setSelectedAssignees((prev) => {
       const next = new Set(prev)
       next.has(id) ? next.delete(id) : next.add(id)
       return next
@@ -176,12 +205,17 @@ function AssignModal({ requestId, sectorId, current, mode, onClose, onSaved }: A
     e.preventDefault()
     setIsSubmitting(true)
     try {
-      const payload = { userIds: Array.from(selected) }
-      const updated = mode === 'assignees'
-        ? await requestService.assignRequest(requestId, payload)
-        : await requestService.setObservers(requestId, payload)
+      const updated =
+        mode === 'assignees'
+          ? await requestService.assignRequest(requestId, {
+              userIds: Array.from(selectedAssignees),
+            })
+          : await requestService.setObservers(requestId, { userIds: selectedObservers })
       onSaved(updated)
-      showToast(mode === 'assignees' ? 'Atribuídos atualizados.' : 'Observadores atualizados.', 'success')
+      showToast(
+        mode === 'assignees' ? 'Responsáveis atualizados.' : 'Observadores atualizados.',
+        'success',
+      )
     } catch (err) {
       if (isApiError(err)) showToast(err.message)
     } finally {
@@ -189,27 +223,60 @@ function AssignModal({ requestId, sectorId, current, mode, onClose, onSaved }: A
     }
   }
 
-  const title = mode === 'assignees' ? 'Atribuir responsáveis' : 'Definir observadores'
+  if (mode === 'observers') {
+    return (
+      <Modal open title="Gerenciar observadores" onClose={onClose}>
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <p className="text-sm text-text-muted">
+            Criador, gerente, admin ou responsável pelo chamado podem adicionar observadores.
+          </p>
+          <ObserverPicker
+            value={selectedObservers}
+            onChange={setSelectedObservers}
+            knownUsers={current}
+          />
+          <div className="flex flex-col-reverse gap-2 border-t border-border pt-4 sm:flex-row sm:justify-end">
+            <Button type="button" variant="secondary" onClick={onClose}>
+              Cancelar
+            </Button>
+            <Button type="submit" variant="primary" disabled={isSubmitting}>
+              {isSubmitting ? 'Salvando...' : 'Confirmar'}
+            </Button>
+          </div>
+        </form>
+      </Modal>
+    )
+  }
 
   return (
-    <Modal open title={title} onClose={onClose}>
+    <Modal open title="Atribuir responsáveis" onClose={onClose}>
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-        {isLoading ? (
-          <p className="text-sm text-text-muted">Carregando membros...</p>
-        ) : members.length === 0 ? (
-          <p className="text-sm text-text-muted">Nenhum membro disponível.</p>
+        {isLoadingAssignees ? (
+          <p className="text-sm text-text-muted">Carregando...</p>
+        ) : assigneeOptions.length === 0 ? (
+          <p className="text-sm text-text-muted">Nenhum membro do setor disponível.</p>
         ) : (
           <div className="flex max-h-64 flex-col gap-2 overflow-y-auto">
-            {members.map((m) => (
-              <label key={m.id} className="flex cursor-pointer items-center gap-3 rounded-lg p-2 hover:bg-secondary">
+            {assigneeOptions.map((m) => (
+              <label
+                key={m.id}
+                className="flex cursor-pointer items-center gap-3 rounded-lg p-2 hover:bg-secondary"
+              >
                 <input
                   type="checkbox"
-                  checked={selected.has(m.id)}
-                  onChange={() => toggle(m.id)}
+                  checked={selectedAssignees.has(m.id)}
+                  onChange={() => toggleAssignee(m.id)}
                   className="h-4 w-4 rounded border-border accent-primary"
                 />
                 <div>
-                  <p className="text-sm font-medium text-text">{m.firstName} {m.lastName}</p>
+                  <p className="text-sm font-medium text-text">
+                    {m.firstName} {m.lastName}
+                    {m.roleName ? (
+                      <span className="ml-2 text-xs font-normal text-text-muted">
+                        {m.roleName}
+                      </span>
+                    ) : null}
+                  </p>
                   <p className="text-xs text-text-muted">{m.email}</p>
                 </div>
               </label>
@@ -217,8 +284,14 @@ function AssignModal({ requestId, sectorId, current, mode, onClose, onSaved }: A
           </div>
         )}
         <div className="flex flex-col-reverse gap-2 border-t border-border pt-4 sm:flex-row sm:justify-end">
-          <Button type="button" variant="secondary" onClick={onClose}>Cancelar</Button>
-          <Button type="submit" variant="primary" disabled={isSubmitting || isLoading}>
+          <Button type="button" variant="secondary" onClick={onClose}>
+            Cancelar
+          </Button>
+          <Button
+            type="submit"
+            variant="primary"
+            disabled={isSubmitting || isLoadingAssignees}
+          >
             {isSubmitting ? 'Salvando...' : 'Confirmar'}
           </Button>
         </div>
@@ -227,19 +300,44 @@ function AssignModal({ requestId, sectorId, current, mode, onClose, onSaved }: A
   )
 }
 
-function MessageBubble({ msg }: { msg: RequestMessage }) {
+function MessageBubble({
+  msg,
+  currentUserId,
+}: {
+  msg: RequestMessage
+  currentUserId?: string
+}) {
+  const isOwn = currentUserId != null && msg.authorId === currentUserId
+  const authorName = msg.author ? fullName(msg.author) : msg.authorId
+  const authorEmail = msg.author?.email
+
   return (
-    <div className="flex flex-col gap-1">
-      <div className="flex items-baseline gap-2">
-        <span className="text-xs font-medium text-text">
-          {msg.author ? fullName(msg.author) : msg.authorId}
-        </span>
-        <span className="text-xs text-text-muted">
+    <div className={`flex ${isOwn ? 'justify-start' : 'justify-end'}`}>
+      <div
+        className={[
+          'flex max-w-[85%] flex-col gap-1 sm:max-w-[75%]',
+          isOwn ? 'items-start' : 'items-end',
+        ].join(' ')}
+      >
+        <div className={`flex flex-col gap-0.5 ${isOwn ? 'items-start' : 'items-end'}`}>
+          <span className="text-xs font-medium text-text">{authorName}</span>
+          {authorEmail ? (
+            <span className="text-xs text-text-muted">{authorEmail}</span>
+          ) : null}
+        </div>
+        <div
+          className={[
+            'rounded-2xl px-3.5 py-2.5 text-sm text-text',
+            isOwn
+              ? 'rounded-bl-md border border-accent/25 bg-accent/10'
+              : 'rounded-br-md border border-border bg-secondary',
+          ].join(' ')}
+        >
+          <p className="whitespace-pre-wrap break-words">{msg.content}</p>
+        </div>
+        <span className="text-[11px] text-text-muted">
           {dateTimeFormatter.format(new Date(msg.createdAt))}
         </span>
-      </div>
-      <div className="rounded-lg border border-border bg-secondary/40 px-3 py-2.5 text-sm text-text">
-        {msg.content}
       </div>
     </div>
   )
@@ -293,7 +391,7 @@ export function RequestDetailPage() {
     } catch (err) {
       if (isApiError(err)) {
         showToast(err.message)
-        navigate('/solicitacoes')
+        navigate('/')
       }
     } finally {
       setIsLoading(false)
@@ -607,7 +705,7 @@ export function RequestDetailPage() {
               <h3 className="text-sm font-semibold text-text-muted uppercase tracking-wide flex items-center gap-1">
                 <Users size={14} /> Observadores
               </h3>
-              {request.permissions.canEdit && !isTerminal ? (
+              {request.permissions.canManageObservers && !isTerminal ? (
                 <button
                   type="button"
                   onClick={() => setAssignMode('observers')}
@@ -626,6 +724,11 @@ export function RequestDetailPage() {
                 ))}
               </ul>
             )}
+            {!isTerminal ? (
+              <p className="mt-2 text-xs text-text-muted">
+                Observadores acompanham o chamado sem poder editá-lo.
+              </p>
+            ) : null}
           </section>
         </div>
       </div>

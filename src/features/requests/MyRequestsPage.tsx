@@ -15,8 +15,9 @@ export function MyRequestsPage() {
     <RequestListPage
       breadcrumbs={myRequestsBreadcrumbs}
       title="Minhas solicitações"
-      description="Solicitações abertas por você."
+      description="Solicitações criadas por você ou em que você foi adicionado como observador."
       fetchRequests={fetchRequests}
+      showParticipation
     />
   )
 }

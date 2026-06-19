@@ -1,7 +1,9 @@
 import { Badge } from '../../components/ui/Badge'
 import {
+  REQUEST_PARTICIPATION_LABEL,
   REQUEST_PRIORITY_LABEL,
   REQUEST_STATUS_LABEL,
+  type RequestParticipationRole,
   type RequestPriority,
   type RequestStatus,
 } from '../../types/request.types'
@@ -35,5 +37,28 @@ export function RequestPriorityBadge({ priority }: { priority: RequestPriority }
     <Badge variant={PRIORITY_VARIANT[priority]}>
       {REQUEST_PRIORITY_LABEL[priority]}
     </Badge>
+  )
+}
+
+const PARTICIPATION_VARIANT: Record<RequestParticipationRole, BadgeVariant> = {
+  CREATOR: 'primary',
+  OBSERVER: 'info',
+}
+
+export function RequestParticipationBadges({
+  roles,
+}: {
+  roles: RequestParticipationRole[]
+}) {
+  if (roles.length === 0) return null
+
+  return (
+    <div className="flex flex-wrap gap-1">
+      {roles.map((role) => (
+        <Badge key={role} variant={PARTICIPATION_VARIANT[role]}>
+          {REQUEST_PARTICIPATION_LABEL[role]}
+        </Badge>
+      ))}
+    </div>
   )
 }
