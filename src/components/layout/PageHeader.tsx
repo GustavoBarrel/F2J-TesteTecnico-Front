@@ -32,7 +32,9 @@ export function PageHeader({
             </div>
           </div>
           {description ? (
-            <p className="mt-3 text-sm text-text-muted">{description}</p>
+            <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-text-muted">
+              {description}
+            </p>
           ) : null}
         </div>
         {actions ? <div className="shrink-0 self-start sm:self-center">{actions}</div> : null}

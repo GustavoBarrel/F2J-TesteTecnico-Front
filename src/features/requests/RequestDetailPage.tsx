@@ -30,14 +30,18 @@ import { useToast } from '../../contexts/ToastContext'
 import { useAuth } from '../../contexts/AuthContext'
 import { requestDetailBreadcrumbs } from '../../lib/breadcrumbs'
 import {
-  REQUEST_PRIORITY_LABEL,
-  REQUEST_STATUS_LABEL,
+  getAccessDeniedRedirect,
+  isAccessDeniedError,
+} from '../../lib/resourceAccess'
+import {
+  REQUEST_HISTORY_ACTION_LABEL,
   type ChangeStatusPayload,
   type Request,
+  type RequestDetail,
   type RequestHistoryEntry,
   type RequestMessage,
   type RequestPriority,
-  type RequestStatus,
+  type RequestUserSummary,
 } from '../../types/request.types'
 import { RequestPriorityBadge, RequestStatusBadge } from './RequestBadges'
 import { ObserverPicker } from './ObserverPicker'
@@ -63,8 +67,16 @@ const dateTimeFormatter = new Intl.DateTimeFormat('pt-BR', {
   minute: '2-digit',
 })
 
-function fullName(u: { firstName: string; lastName: string }) {
-  return `${u.firstName} ${u.lastName}`
+function UserChip({ user }: { user: RequestUserSummary }) {  return (
+    <span className="inline-flex items-center rounded-md bg-secondary px-2 py-0.5 text-xs font-medium text-text">
+      @{user.username}
+    </span>
+  )
+}
+
+function mergeRequestUpdate(prev: RequestDetail | null, updated: Request): RequestDetail | null {
+  if (!prev) return null
+  return { ...prev, ...updated }
 }
 
 interface EditModalProps {
@@ -307,9 +319,8 @@ function MessageBubble({
   msg: RequestMessage
   currentUserId?: string
 }) {
-  const isOwn = currentUserId != null && msg.authorId === currentUserId
-  const authorName = msg.author ? fullName(msg.author) : msg.authorId
-  const authorEmail = msg.author?.email
+  const isOwn = currentUserId != null && msg.author?.id === currentUserId
+  const authorLabel = msg.author?.username ?? '—'
 
   return (
     <div className={`flex ${isOwn ? 'justify-start' : 'justify-end'}`}>
@@ -319,12 +330,9 @@ function MessageBubble({
           isOwn ? 'items-start' : 'items-end',
         ].join(' ')}
       >
-        <div className={`flex flex-col gap-0.5 ${isOwn ? 'items-start' : 'items-end'}`}>
-          <span className="text-xs font-medium text-text">{authorName}</span>
-          {authorEmail ? (
-            <span className="text-xs text-text-muted">{authorEmail}</span>
-          ) : null}
-        </div>
+        <span className={`text-xs font-medium text-text ${isOwn ? '' : 'text-end'}`}>
+          {authorLabel}
+        </span>
         <div
           className={[
             'rounded-2xl px-3.5 py-2.5 text-sm text-text',
@@ -349,7 +357,7 @@ export function RequestDetailPage() {
   const { showToast } = useToast()
   const { user } = useAuth()
 
-  const [request, setRequest] = useState<Request | null>(null)
+  const [request, setRequest] = useState<RequestDetail | null>(null)
   const [messages, setMessages] = useState<RequestMessage[]>([])
   const [history, setHistory] = useState<RequestHistoryEntry[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -371,32 +379,31 @@ export function RequestDetailPage() {
 
   const loadRequest = useCallback(async () => {
     if (!id) return
+    setIsLoading(true)
     try {
-      const [req, msgs] = await Promise.all([
-        requestService.getRequest(id),
-        requestService.getMessages(id),
-      ])
+      const req = await requestService.getRequest(id)
       setRequest(req)
-      setMessages(msgs)
+      setMessages(req.messages)
+      setHistory(req.history)
       setStatusValue(
-        req.status === 'NEW' || req.status === 'PENDING' || req.status === 'IN_PROGRESS' || req.status === 'COMPLETED'
+        req.status === 'NEW' ||
+          req.status === 'PENDING' ||
+          req.status === 'IN_PROGRESS' ||
+          req.status === 'COMPLETED'
           ? (req.status as ChangeStatusPayload['status'])
           : 'PENDING',
       )
-      if (user?.isGlobalAdmin) {
-        requestService.getHistory(id)
-          .then(setHistory)
-          .catch(() => {})
-      }
     } catch (err) {
-      if (isApiError(err)) {
+      if (isAccessDeniedError(err)) {
         showToast(err.message)
-        navigate('/')
+        navigate(getAccessDeniedRedirect(err.statusCode))
+      } else if (isApiError(err)) {
+        showToast(err.message)
       }
     } finally {
       setIsLoading(false)
     }
-  }, [id, navigate, showToast, user?.isGlobalAdmin])
+  }, [id, navigate, showToast])
 
   useEffect(() => { void loadRequest() }, [loadRequest])
 
@@ -424,7 +431,7 @@ export function RequestDetailPage() {
     setIsChangingStatus(true)
     try {
       const updated = await requestService.changeRequestStatus(id, { status: statusValue })
-      setRequest(updated)
+      setRequest((prev) => mergeRequestUpdate(prev, updated))
       showToast('Status atualizado.', 'success')
     } catch (err) {
       if (isApiError(err)) showToast(err.message)
@@ -438,7 +445,7 @@ export function RequestDetailPage() {
     setIsCancelling(true)
     try {
       const updated = await requestService.cancelRequest(id)
-      setRequest(updated)
+      setRequest((prev) => mergeRequestUpdate(prev, updated))
       setShowCancelModal(false)
       showToast('Solicitação cancelada.', 'success')
     } catch (err) {
@@ -453,7 +460,7 @@ export function RequestDetailPage() {
     setIsArchiving(true)
     try {
       const updated = await requestService.archiveRequest(id)
-      setRequest(updated)
+      setRequest((prev) => mergeRequestUpdate(prev, updated))
       setShowArchiveModal(false)
       showToast('Solicitação arquivada.', 'success')
     } catch (err) {
@@ -465,9 +472,12 @@ export function RequestDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="mx-auto flex max-w-5xl flex-col gap-6">
+      <div className="mx-auto flex max-w-6xl flex-col gap-6">
         <div className="h-20 animate-pulse rounded-xl bg-secondary/40" />
-        <div className="h-64 animate-pulse rounded-xl bg-secondary/40" />
+        <div className="grid gap-6 lg:grid-cols-5">
+          <div className="h-[28rem] animate-pulse rounded-xl bg-secondary/40 lg:col-span-3" />
+          <div className="h-64 animate-pulse rounded-xl bg-secondary/40 lg:col-span-2" />
+        </div>
       </div>
     )
   }
@@ -478,11 +488,12 @@ export function RequestDetailPage() {
   const canCancel = !isTerminal && request.status !== 'COMPLETED'
 
   return (
-    <div className="mx-auto flex max-w-5xl flex-col gap-6">
+    <div className="mx-auto flex max-w-6xl flex-col gap-5">
       <PageHeader
         breadcrumbs={requestDetailBreadcrumbs(request.title)}
         icon={<ClipboardList size={20} />}
         title={request.title}
+        subtitle={`${request.sector.name} · ${request.sectorService.name}`}
         actions={
           <div className="flex flex-wrap gap-2">
             {request.permissions.canEdit && !isTerminal ? (
@@ -507,20 +518,27 @@ export function RequestDetailPage() {
         }
       />
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        {/* Left column */}
-        <div className="flex flex-col gap-5 lg:col-span-2">
-          {/* Description */}
-          <section className="rounded-xl border border-border bg-surface p-5">
-            <h3 className="mb-3 text-sm font-semibold text-text-muted uppercase tracking-wide">
-              Descrição
-            </h3>
-            <p className="whitespace-pre-wrap text-sm text-text">{request.description}</p>
-          </section>
+      <div className="flex flex-wrap items-center gap-2">
+        <RequestStatusBadge status={request.status} />
+        <RequestPriorityBadge priority={request.priority} />
+        <span className="text-xs text-text-muted">
+          @{request.createdBy.username} · {dateTimeFormatter.format(new Date(request.createdAt))}
+        </span>
+      </div>
 
-          {/* Messages / History tabs */}
-          <section className="rounded-xl border border-border bg-surface">
-            <div className="flex border-b border-border">
+      {isTerminal ? (
+        <div className="rounded-lg border border-border bg-secondary/60 px-4 py-2.5 text-sm text-text-muted">
+          {request.status === 'CANCELLED'
+            ? 'Solicitação cancelada — somente leitura.'
+            : 'Solicitação arquivada — somente leitura.'}
+        </div>
+      ) : null}
+
+      <div className="grid items-start gap-6 lg:grid-cols-5">
+        {/* Esquerda: mensagens e histórico */}
+        <div className="order-2 flex min-h-[28rem] flex-col lg:order-1 lg:col-span-3 lg:min-h-[calc(100vh-14rem)]">
+          <section className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-border bg-surface">
+            <div className="flex shrink-0 border-b border-border">
               <button
                 type="button"
                 onClick={() => setActiveTab('messages')}
@@ -552,20 +570,25 @@ export function RequestDetailPage() {
             </div>
 
             {activeTab === 'messages' ? (
-              <div className="flex flex-col gap-4 p-5">
-                {messages.length === 0 ? (
-                  <p className="text-sm text-text-muted">Nenhuma mensagem ainda.</p>
-                ) : (
-                  <div className="flex flex-col gap-4">
-                    {messages.map((msg) => (
-                      <MessageBubble key={msg.id} msg={msg} />
-                    ))}
-                    <div ref={messagesEndRef} />
-                  </div>
-                )}
+              <div className="flex min-h-0 flex-1 flex-col">
+                <div className="flex-1 overflow-y-auto p-5">
+                  {messages.length === 0 ? (
+                    <p className="text-sm text-text-muted">Nenhuma mensagem ainda.</p>
+                  ) : (
+                    <div className="flex flex-col gap-4">
+                      {messages.map((msg) => (
+                        <MessageBubble key={msg.id} msg={msg} currentUserId={user?.sub} />
+                      ))}
+                      <div ref={messagesEndRef} />
+                    </div>
+                  )}
+                </div>
 
                 {!isTerminal ? (
-                  <form onSubmit={handleSendMessage} className="flex gap-2 border-t border-border pt-4">
+                  <form
+                    onSubmit={handleSendMessage}
+                    className="flex shrink-0 gap-2 border-t border-border bg-surface p-4"
+                  >
                     <input
                       value={msgContent}
                       onChange={(e) => setMsgContent(e.target.value)}
@@ -580,17 +603,23 @@ export function RequestDetailPage() {
                 ) : null}
               </div>
             ) : (
-              <div className="p-5">
+              <div className="flex-1 overflow-y-auto p-5">
                 {history.length === 0 ? (
                   <p className="text-sm text-text-muted">Nenhum evento registrado.</p>
                 ) : (
                   <ol className="flex flex-col gap-3">
                     {history.map((entry) => (
                       <li key={entry.id} className="flex items-start gap-3">
-                        <div className="mt-1 h-2 w-2 shrink-0 rounded-full bg-primary" />
-                        <div>
-                          <p className="text-sm text-text">{entry.event}{entry.description ? ` — ${entry.description}` : ''}</p>
-                          <p className="text-xs text-text-muted">
+                        <div className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-primary" />
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-medium text-text">
+                            {REQUEST_HISTORY_ACTION_LABEL[entry.action]}
+                          </p>
+                          {entry.description ? (
+                            <p className="mt-0.5 text-sm text-text-muted">{entry.description}</p>
+                          ) : null}
+                          <p className="mt-1 text-xs text-text-muted">
+                            {entry.user.username} ·{' '}
                             {dateTimeFormatter.format(new Date(entry.createdAt))}
                           </p>
                         </div>
@@ -603,131 +632,123 @@ export function RequestDetailPage() {
           </section>
         </div>
 
-        {/* Right column */}
-        <div className="flex flex-col gap-4">
-          {/* Meta info */}
-          <section className="rounded-xl border border-border bg-surface p-5">
-            <h3 className="mb-4 text-sm font-semibold text-text-muted uppercase tracking-wide">
-              Informações
+        {/* Direita: descrição e detalhes */}
+        <div className="order-1 flex flex-col gap-4 lg:order-2 lg:col-span-2">
+          <section className="rounded-xl border border-border bg-surface p-4 lg:p-5">
+            <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-text-muted">
+              Descrição
             </h3>
-            <dl className="flex flex-col gap-3 text-sm">
+            <p className="whitespace-pre-wrap text-sm leading-relaxed text-text">
+              {request.description}
+            </p>
+          </section>
+
+          <section className="rounded-xl border border-border bg-surface p-4 lg:p-5">
+            <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-text-muted">
+              Detalhes
+            </h3>
+
+            <dl className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
               <div>
-                <dt className="text-xs text-text-muted">Status</dt>
-                <dd className="mt-1">
-                  <RequestStatusBadge status={request.status} />
-                </dd>
+                <dt className="text-xs text-text-muted">Setor</dt>
+                <dd className="mt-0.5 text-text">{request.sector.name}</dd>
               </div>
               <div>
-                <dt className="text-xs text-text-muted">Prioridade</dt>
-                <dd className="mt-1">
-                  <RequestPriorityBadge priority={request.priority} />
-                </dd>
+                <dt className="text-xs text-text-muted">Serviço</dt>
+                <dd className="mt-0.5 text-text">{request.sectorService.name}</dd>
               </div>
               <div>
-                <dt className="text-xs text-text-muted flex items-center gap-1">
-                  <Clock size={12} /> Criada em
-                </dt>
-                <dd className="mt-0.5 text-text">
-                  {dateTimeFormatter.format(new Date(request.createdAt))}
-                </dd>
+                <dt className="text-xs text-text-muted">Criado por</dt>
+                <dd className="mt-0.5 text-text">@{request.createdBy.username}</dd>
               </div>
               <div>
                 <dt className="text-xs text-text-muted flex items-center gap-1">
                   <Clock size={12} /> Atualizada em
                 </dt>
-                <dd className="mt-0.5 text-text">
+                <dd className="mt-0.5 text-xs leading-snug text-text">
                   {dateTimeFormatter.format(new Date(request.updatedAt))}
                 </dd>
               </div>
             </dl>
-          </section>
 
-          {/* Change status */}
-          {request.permissions.canEdit && !isTerminal ? (
-            <section className="rounded-xl border border-border bg-surface p-5">
-              <h3 className="mb-3 text-sm font-semibold text-text-muted uppercase tracking-wide">
-                Alterar status
-              </h3>
-              <div className="flex flex-col gap-2">
-                <Select
-                  label="Novo status"
-                  hideLabel
-                  name="changeStatus"
-                  options={CHANGE_STATUS_OPTIONS}
-                  value={statusValue}
-                  onChange={(e) => setStatusValue(e.target.value as ChangeStatusPayload['status'])}
-                />
-                <Button
-                  variant="primary"
-                  fullWidth
-                  disabled={
-                    isChangingStatus ||
-                    statusValue === request.status
-                  }
-                  onClick={handleChangeStatus}
-                >
-                  {isChangingStatus ? 'Salvando...' : 'Confirmar status'}
-                </Button>
+            <div className="mt-4 border-t border-border pt-4">
+              <div className="mb-2 flex items-center justify-between">
+                <h4 className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-text-muted">
+                  <UserCheck size={13} /> Responsáveis
+                </h4>
+                {request.permissions.canEdit && !isTerminal ? (
+                  <button
+                    type="button"
+                    onClick={() => setAssignMode('assignees')}
+                    className="text-xs text-accent hover:underline"
+                  >
+                    Editar
+                  </button>
+                ) : null}
               </div>
-            </section>
-          ) : null}
-
-          {/* Assignees */}
-          <section className="rounded-xl border border-border bg-surface p-5">
-            <div className="mb-3 flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-text-muted uppercase tracking-wide flex items-center gap-1">
-                <UserCheck size={14} /> Responsáveis
-              </h3>
-              {request.permissions.canEdit && !isTerminal ? (
-                <button
-                  type="button"
-                  onClick={() => setAssignMode('assignees')}
-                  className="text-xs text-accent hover:underline"
-                >
-                  Editar
-                </button>
-              ) : null}
+              {request.assignees.length === 0 ? (
+                <p className="text-xs text-text-muted">Nenhum responsável atribuído.</p>
+              ) : (
+                <div className="flex flex-wrap gap-1.5">
+                  {request.assignees.map((a) => (
+                    <UserChip key={a.id} user={a} />
+                  ))}
+                </div>
+              )}
             </div>
-            {request.assignees.length === 0 ? (
-              <p className="text-xs text-text-muted">Nenhum responsável atribuído.</p>
-            ) : (
-              <ul className="flex flex-col gap-2">
-                {request.assignees.map((a) => (
-                  <li key={a.id} className="text-sm text-text">{fullName(a)}</li>
-                ))}
-              </ul>
-            )}
-          </section>
 
-          {/* Observers */}
-          <section className="rounded-xl border border-border bg-surface p-5">
-            <div className="mb-3 flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-text-muted uppercase tracking-wide flex items-center gap-1">
-                <Users size={14} /> Observadores
-              </h3>
-              {request.permissions.canManageObservers && !isTerminal ? (
-                <button
-                  type="button"
-                  onClick={() => setAssignMode('observers')}
-                  className="text-xs text-accent hover:underline"
-                >
-                  Editar
-                </button>
-              ) : null}
+            <div className="mt-4 border-t border-border pt-4">
+              <div className="mb-2 flex items-center justify-between">
+                <h4 className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-text-muted">
+                  <Users size={13} /> Observadores
+                </h4>
+                {request.permissions.canManageObservers && !isTerminal ? (
+                  <button
+                    type="button"
+                    onClick={() => setAssignMode('observers')}
+                    className="text-xs text-accent hover:underline"
+                  >
+                    Editar
+                  </button>
+                ) : null}
+              </div>
+              {request.observers.length === 0 ? (
+                <p className="text-xs text-text-muted">Nenhum observador definido.</p>
+              ) : (
+                <div className="flex flex-wrap gap-1.5">
+                  {request.observers.map((o) => (
+                    <UserChip key={o.id} user={o} />
+                  ))}
+                </div>
+              )}
             </div>
-            {request.observers.length === 0 ? (
-              <p className="text-xs text-text-muted">Nenhum observador definido.</p>
-            ) : (
-              <ul className="flex flex-col gap-2">
-                {request.observers.map((o) => (
-                  <li key={o.id} className="text-sm text-text">{fullName(o)}</li>
-                ))}
-              </ul>
-            )}
-            {!isTerminal ? (
-              <p className="mt-2 text-xs text-text-muted">
-                Observadores acompanham o chamado sem poder editá-lo.
-              </p>
+
+            {request.permissions.canEdit && !isTerminal ? (
+              <div className="mt-4 border-t border-border pt-4">
+                <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-text-muted">
+                  Alterar status
+                </h4>
+                <div className="flex flex-col gap-2">
+                  <Select
+                    label="Novo status"
+                    hideLabel
+                    name="changeStatus"
+                    options={CHANGE_STATUS_OPTIONS}
+                    value={statusValue}
+                    onChange={(e) =>
+                      setStatusValue(e.target.value as ChangeStatusPayload['status'])
+                    }
+                  />
+                  <Button
+                    variant="primary"
+                    fullWidth
+                    disabled={isChangingStatus || statusValue === request.status}
+                    onClick={handleChangeStatus}
+                  >
+                    {isChangingStatus ? 'Salvando...' : 'Confirmar status'}
+                  </Button>
+                </div>
+              </div>
             ) : null}
           </section>
         </div>
@@ -738,7 +759,10 @@ export function RequestDetailPage() {
         <EditModal
           request={request}
           onClose={() => setShowEditModal(false)}
-          onSaved={(r) => { setRequest(r); setShowEditModal(false) }}
+          onSaved={(r) => {
+            setRequest((prev) => mergeRequestUpdate(prev, r))
+            setShowEditModal(false)
+          }}
         />
       ) : null}
 
@@ -749,7 +773,10 @@ export function RequestDetailPage() {
           current={assignMode === 'assignees' ? request.assignees : request.observers}
           mode={assignMode}
           onClose={() => setAssignMode(null)}
-          onSaved={(r) => { setRequest(r); setAssignMode(null) }}
+          onSaved={(r) => {
+            setRequest((prev) => mergeRequestUpdate(prev, r))
+            setAssignMode(null)
+          }}
         />
       ) : null}
 

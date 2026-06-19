@@ -46,8 +46,11 @@ export function Sidebar() {
 
       <aside
         className={[
-          'fixed inset-y-0 left-0 z-50 flex w-56 max-w-[72vw] flex-col bg-sidebar text-white shadow-xl transition-transform xl:static xl:w-52 xl:max-w-none xl:translate-x-0 xl:shadow-none',
-          open ? 'translate-x-0' : '-translate-x-full',
+          'relative z-30 flex w-52 shrink-0 flex-col bg-sidebar text-white',
+          'max-xl:fixed max-xl:inset-y-0 max-xl:left-0 max-xl:z-50 max-xl:w-56 max-xl:max-w-[72vw] max-xl:shadow-xl max-xl:transition-transform',
+          open
+            ? 'max-xl:translate-x-0 max-xl:pointer-events-auto'
+            : 'max-xl:pointer-events-none max-xl:-translate-x-full',
         ].join(' ')}
       >
         <div className="flex items-center justify-between border-b border-white/10 p-3 xl:p-4">

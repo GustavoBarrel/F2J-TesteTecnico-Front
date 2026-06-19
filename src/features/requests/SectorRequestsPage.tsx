@@ -50,7 +50,6 @@ export function SectorRequestsPage() {
   const [requests, setRequests] = useState<Request[]>([])
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
-  const [total, setTotal] = useState(0)
   const [isLoading, setIsLoading] = useState(true)
 
   const [searchInput, setSearchInput] = useState('')
@@ -81,7 +80,6 @@ export function SectorRequestsPage() {
       })
       setRequests(res.data)
       setTotalPages(res.meta.totalPages)
-      setTotal(res.meta.total)
     } catch (err) {
       if (isApiError(err)) showToast(err.message)
     } finally {
@@ -232,7 +230,6 @@ export function SectorRequestsPage() {
             <Pagination
               page={page}
               totalPages={totalPages}
-              total={total}
               onPageChange={setPage}
             />
           </div>

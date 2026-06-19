@@ -1,12 +1,13 @@
 import { ClipboardList } from 'lucide-react'
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { PageHeader } from '../../components/layout/PageHeader'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
 import { Select } from '../../components/ui/Select'
 import { isApiError } from '../../services/api'
 import * as requestService from '../../services/requestService'
+import * as sectorService from '../../services/sectorService'
 import { useToast } from '../../contexts/ToastContext'
 import { newRequestBreadcrumbs } from '../../lib/breadcrumbs'
 import { ObserverPicker } from './ObserverPicker'
@@ -37,23 +38,55 @@ export function NewRequestPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   useEffect(() => {
+    let cancelled = false
+
     async function loadOptions() {
       setIsLoadingOptions(true)
       try {
-        const data = await requestService.getSectorServicesOptions()
-        setSectorsWithServices(
-          data.map((s) => ({
-            ...s,
-            sectorServices: s.sectorServices.filter((sv) => sv.isActive),
-          })),
+        const [optionsResult, sectorsResult] = await Promise.allSettled([
+          requestService.getSectorServicesOptions(),
+          sectorService.getSectors({ isActive: true, limit: 100 }),
+        ])
+
+        if (cancelled) return
+
+        const options =
+          optionsResult.status === 'fulfilled' ? optionsResult.value : []
+        const servicesBySectorId = new Map(
+          options.map((sector) => [
+            sector.id,
+            sector.sectorServices.filter((service) => service.isActive),
+          ]),
         )
+
+        let sectors: SectorWithServicesOption[] = []
+
+        if (sectorsResult.status === 'fulfilled' && sectorsResult.value.data.length > 0) {
+          sectors = sectorsResult.value.data.map((sector) => ({
+            id: sector.id,
+            name: sector.name,
+            sectorServices: servicesBySectorId.get(sector.id) ?? [],
+          }))
+        } else {
+          sectors = options.map((sector) => ({
+            id: sector.id,
+            name: sector.name,
+            sectorServices: servicesBySectorId.get(sector.id) ?? [],
+          }))
+        }
+
+        setSectorsWithServices(sectors)
       } catch (err) {
-        if (isApiError(err)) showToast(err.message)
+        if (!cancelled && isApiError(err)) showToast(err.message)
       } finally {
-        setIsLoadingOptions(false)
+        if (!cancelled) setIsLoadingOptions(false)
       }
     }
     void loadOptions()
+
+    return () => {
+      cancelled = true
+    }
   }, [showToast])
 
   const sectorOptions = useMemo(
@@ -64,14 +97,21 @@ export function NewRequestPage() {
     [sectorsWithServices],
   )
 
+  const selectedSector = useMemo(
+    () => sectorsWithServices.find((s) => s.id === sectorId),
+    [sectorsWithServices, sectorId],
+  )
+
+  const selectedSectorHasNoServices =
+    Boolean(selectedSector) && selectedSector!.sectorServices.length === 0
+
   const serviceOptions = useMemo(() => {
-    const sector = sectorsWithServices.find((s) => s.id === sectorId)
-    if (!sector) return [{ value: '', label: 'Selecione um serviço...' }]
+    if (!selectedSector) return [{ value: '', label: 'Selecione um serviço...' }]
     return [
       { value: '', label: 'Selecione um serviço...' },
-      ...sector.sectorServices.map((sv) => ({ value: sv.id, label: sv.name })),
+      ...selectedSector.sectorServices.map((sv) => ({ value: sv.id, label: sv.name })),
     ]
-  }, [sectorsWithServices, sectorId])
+  }, [selectedSector])
 
   function validate(): boolean {
     const e: FormErrors = {}
@@ -134,7 +174,7 @@ export function NewRequestPage() {
           </div>
         ) : sectorsWithServices.length === 0 ? (
           <div className="py-8 text-center text-sm text-text-muted">
-            Nenhum setor com serviços disponíveis para solicitação.
+            Nenhum setor disponível para solicitação.
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="flex flex-col gap-5">
@@ -152,19 +192,24 @@ export function NewRequestPage() {
                   setErrors((prev) => ({ ...prev, sectorId: undefined }))
                 }}
               />
-              <Select
-                label="Serviço"
-                required
-                name="sectorServiceId"
-                options={serviceOptions}
-                value={sectorServiceId}
-                error={errors.sectorServiceId}
-                disabled={!sectorId}
-                onChange={(e) => {
-                  setSectorServiceId(e.target.value)
-                  setErrors((prev) => ({ ...prev, sectorServiceId: undefined }))
-                }}
-              />
+              <div className="flex flex-col gap-1.5">
+                <Select
+                  label="Serviço"
+                  required
+                  name="sectorServiceId"
+                  options={serviceOptions}
+                  value={sectorServiceId}
+                  error={errors.sectorServiceId}
+                  disabled={!sectorId || selectedSectorHasNoServices}
+                  onChange={(e) => {
+                    setSectorServiceId(e.target.value)
+                    setErrors((prev) => ({ ...prev, sectorServiceId: undefined }))
+                  }}
+                />
+                {selectedSectorHasNoServices ? (
+                  <p className="text-xs text-text-muted">Não tem serviços registrados.</p>
+                ) : null}
+              </div>
             </div>
 
             <Input
@@ -211,14 +256,18 @@ export function NewRequestPage() {
             <ObserverPicker value={observerIds} onChange={setObserverIds} />
 
             <div className="flex justify-end gap-3 border-t border-border pt-4">
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={() => navigate('/')}
+              <Link
+                to="/"
+                replace
+                className="inline-flex flex-nowrap items-center justify-center gap-2 rounded-lg bg-secondary px-4 py-2.5 text-sm font-medium text-primary transition-colors hover:bg-secondary/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:ring-offset-2"
               >
                 Cancelar
-              </Button>
-              <Button type="submit" variant="primary" disabled={isSubmitting}>
+              </Link>
+              <Button
+                type="submit"
+                variant="primary"
+                disabled={isSubmitting || selectedSectorHasNoServices}
+              >
                 {isSubmitting ? 'Enviando...' : 'Criar solicitação'}
               </Button>
             </div>

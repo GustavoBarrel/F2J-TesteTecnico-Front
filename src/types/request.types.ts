@@ -12,6 +12,7 @@ export type RequestPriority = 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT'
 
 export interface RequestUserSummary {
   id: string
+  username: string
   firstName: string
   lastName: string
   email: string

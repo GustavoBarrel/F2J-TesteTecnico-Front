@@ -25,23 +25,54 @@ export default function App() {
         </Route>
 
         <Route element={<PrivateRoute />}>
-          <Route element={<AppLayout />}>
-            <Route path="/" element={<HomePage />} />
-
-            <Route path="/solicitacoes" element={<Navigate to="/" replace />} />
-            <Route path="/solicitacoes/nova" element={<NewRequestPage />} />
-            <Route path="/solicitacoes/minhas" element={<MyRequestsPage />} />
-            <Route path="/solicitacoes/atribuidas" element={<AssignedRequestsPage />} />
-            <Route path="/solicitacoes/setores/:sectorId" element={<SectorRequestsPage />} />
-            <Route path="/solicitacoes/:id" element={<RequestDetailPage />} />
-
-            <Route element={<AdminRoute />}>
-              <Route path="/usuarios" element={<UsersPage />} />
-              <Route path="/setores" element={<SectorsPage />} />
-              <Route path="/setores/:sectorId/servicos" element={<SectorServicesPage />} />
-              <Route path="/setores/:sectorId/membros" element={<SectorMembersPage />} />
-              <Route path="/setores/:sectorId/membros/vincular" element={<LinkSectorMemberPage />} />
-            </Route>
+          <Route path="/" element={<AppLayout />}>
+            <Route index element={<HomePage />} />
+            <Route
+              path="usuarios"
+              element={
+                <AdminRoute>
+                  <UsersPage />
+                </AdminRoute>
+              }
+            />
+            <Route
+              path="setores"
+              element={
+                <AdminRoute>
+                  <SectorsPage />
+                </AdminRoute>
+              }
+            />
+            <Route
+              path="setores/:sectorId/servicos"
+              element={
+                <AdminRoute>
+                  <SectorServicesPage />
+                </AdminRoute>
+              }
+            />
+            <Route
+              path="setores/:sectorId/membros"
+              element={
+                <AdminRoute>
+                  <SectorMembersPage />
+                </AdminRoute>
+              }
+            />
+            <Route
+              path="setores/:sectorId/membros/vincular"
+              element={
+                <AdminRoute>
+                  <LinkSectorMemberPage />
+                </AdminRoute>
+              }
+            />
+            <Route path="solicitacoes" element={<Navigate to="/" replace />} />
+            <Route path="solicitacoes/nova" element={<NewRequestPage />} />
+            <Route path="solicitacoes/minhas" element={<MyRequestsPage />} />
+            <Route path="solicitacoes/atribuidas" element={<AssignedRequestsPage />} />
+            <Route path="solicitacoes/setores/:sectorId" element={<SectorRequestsPage />} />
+            <Route path="solicitacoes/:id" element={<RequestDetailPage />} />
           </Route>
         </Route>
 
