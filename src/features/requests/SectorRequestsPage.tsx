@@ -7,7 +7,7 @@ import { Input } from '../../components/ui/Input'
 import { Pagination } from '../../components/ui/Pagination'
 import { Select } from '../../components/ui/Select'
 import { isApiError } from '../../services/api'
-import * as sectorService from '../../services/sectorService'
+import * as meService from '../../services/meService'
 import * as requestService from '../../services/requestService'
 import { useToast } from '../../contexts/ToastContext'
 import { sectorRequestsBreadcrumbs } from '../../lib/breadcrumbs'
@@ -64,9 +64,12 @@ export function SectorRequestsPage() {
 
   useEffect(() => {
     if (!sectorId) return
-    sectorService
-      .getSector(sectorId)
-      .then((s) => setSectorName(s.name))
+    meService
+      .getMySectors()
+      .then((sectors) => {
+        const sector = sectors.find((s) => s.id === sectorId)
+        if (sector) setSectorName(sector.name)
+      })
       .catch(() => {})
   }, [sectorId])
 

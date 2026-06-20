@@ -130,7 +130,6 @@ export interface RequestDetail extends Request {
   sectorService: RequestServiceSummary
   createdBy: RequestUserSummary
   messages: RequestMessage[]
-  history: RequestHistoryEntry[]
 }
 
 export interface RequestMessagesQuery {

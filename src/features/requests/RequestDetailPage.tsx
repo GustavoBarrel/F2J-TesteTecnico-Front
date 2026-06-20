@@ -92,6 +92,8 @@ const dateTimeFormatter = new Intl.DateTimeFormat('pt-BR', {
 
 const MESSAGE_PAGE_SIZE = 12
 
+const adminHistoryCache = new Map<string, RequestHistoryEntry[]>()
+
 const MESSAGES_PANEL_CLASS =
   'order-1 flex h-[min(20rem,calc(100dvh-16rem))] flex-col sm:h-[24rem] md:h-[28rem] lg:order-1 lg:col-span-3 lg:h-[36rem] xl:h-[42rem] 2xl:h-[46rem]'
 
@@ -386,6 +388,7 @@ export function RequestDetailPage() {
   const [messages, setMessages] = useState<RequestMessage[]>([])
   const [messagesMeta, setMessagesMeta] = useState<PaginatedMeta | null>(null)
   const [history, setHistory] = useState<RequestHistoryEntry[]>([])
+  const [isLoadingHistory, setIsLoadingHistory] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<'messages' | 'history'>('messages')
   const [oldestLoadedPage, setOldestLoadedPage] = useState(1)
@@ -418,7 +421,6 @@ export function RequestDetailPage() {
     try {
       const req = await requestService.getRequest(id)
       setRequest(req)
-      setHistory(req.history)
       setStatusValue(
         req.status === 'PENDING' || req.status === 'IN_PROGRESS'
           ? req.status
@@ -438,6 +440,42 @@ export function RequestDetailPage() {
   }, [id, navigate, showToast])
 
   useEffect(() => { void loadRequest() }, [loadRequest])
+
+  const loadHistory = useCallback(async () => {
+    if (!id || !user?.isGlobalAdmin) return
+
+    const cached = adminHistoryCache.get(id)
+    if (cached) {
+      setHistory(cached)
+      return
+    }
+
+    setIsLoadingHistory(true)
+    try {
+      const entries = await requestService.getAdminRequestHistory(id)
+      adminHistoryCache.set(id, entries)
+      setHistory(entries)
+    } catch (err) {
+      if (isApiError(err)) showToast(err.message)
+    } finally {
+      setIsLoadingHistory(false)
+    }
+  }, [id, user?.isGlobalAdmin, showToast])
+
+  useEffect(() => {
+    setActiveTab('messages')
+    setHistory(id ? (adminHistoryCache.get(id) ?? []) : [])
+  }, [id])
+
+  useEffect(() => {
+    if (!user?.isGlobalAdmin && activeTab === 'history') {
+      setActiveTab('messages')
+      return
+    }
+    if (activeTab === 'history' && user?.isGlobalAdmin) {
+      void loadHistory()
+    }
+  }, [activeTab, user?.isGlobalAdmin, loadHistory])
 
   const loadInitialMessages = useCallback(async () => {
     if (!id) return
@@ -545,6 +583,7 @@ export function RequestDetailPage() {
     try {
       const updated = await requestService.changeRequestStatus(id, { status: statusValue })
       setRequest((prev) => mergeRequestUpdate(prev, updated))
+      adminHistoryCache.delete(id)
       showToast('Status atualizado.', 'success')
     } catch (err) {
       if (isApiError(err)) showToast(err.message)
@@ -646,6 +685,9 @@ export function RequestDetailPage() {
 
   const { permissions } = request
   const blockedBanner = blockedStatusBanner(request.status)
+  const canAdminReopenCompleted =
+    user?.isGlobalAdmin === true && request.status === 'COMPLETED'
+  const showStatusControls = permissions.canChangeStatus || canAdminReopenCompleted
   const hasMoreMessages = oldestLoadedPage > 1
   const messagesTotal = messagesMeta?.total ?? messages.length
 
@@ -788,7 +830,9 @@ export function RequestDetailPage() {
               </div>
             ) : (
               <div className="scrollbar-subtle min-h-0 flex-1 overflow-y-auto p-3 sm:p-5">
-                {history.length === 0 ? (
+                {isLoadingHistory ? (
+                  <p className="text-sm text-text-muted">Carregando histórico...</p>
+                ) : history.length === 0 ? (
                   <p className="text-sm text-text-muted">Nenhum evento registrado.</p>
                 ) : (
                   <ol className="flex flex-col gap-3">
@@ -933,11 +977,16 @@ export function RequestDetailPage() {
               </div>
             ) : null}
 
-            {permissions.canChangeStatus ? (
+            {showStatusControls ? (
               <div className="mt-4 border-t border-border pt-4">
                 <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-text-muted">
                   Alterar status
                 </h4>
+                {canAdminReopenCompleted ? (
+                  <p className="mb-3 text-xs text-text-muted">
+                    Como administrador, você pode reabrir esta solicitação concluída alterando o status.
+                  </p>
+                ) : null}
                 <div className="flex flex-col gap-2">
                   <Select
                     label="Novo status"
@@ -954,7 +1003,7 @@ export function RequestDetailPage() {
                       isChangingStatus ||
                       request.status === statusValue ||
                       request.status === 'SOLVED' ||
-                      request.status === 'COMPLETED'
+                      (request.status === 'COMPLETED' && !user?.isGlobalAdmin)
                     }
                     onClick={handleChangeStatus}
                   >

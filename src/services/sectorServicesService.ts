@@ -23,18 +23,20 @@ export function getSectorServices(
   sectorId: string,
   params: SectorServicesQuery = {},
 ): Promise<PaginatedSectorServices> {
-  return api<PaginatedSectorServices>(`/sectors/${sectorId}/services${buildQuery(params)}`)
+  return api<PaginatedSectorServices>(
+    `/admin/sectors/${sectorId}/services${buildQuery(params)}`,
+  )
 }
 
 export function getSectorService(sectorId: string, id: string): Promise<SectorServiceItem> {
-  return api<SectorServiceItem>(`/sectors/${sectorId}/services/${id}`)
+  return api<SectorServiceItem>(`/admin/sectors/${sectorId}/services/${id}`)
 }
 
 export function createSectorService(
   sectorId: string,
   payload: CreateSectorServicePayload,
 ): Promise<SectorServiceItem> {
-  return api<SectorServiceItem>(`/sectors/${sectorId}/services`, {
+  return api<SectorServiceItem>(`/admin/sectors/${sectorId}/services`, {
     method: 'POST',
     body: payload,
   })
@@ -45,7 +47,7 @@ export function updateSectorService(
   id: string,
   payload: UpdateSectorServicePayload,
 ): Promise<SectorServiceItem> {
-  return api<SectorServiceItem>(`/sectors/${sectorId}/services/${id}`, {
+  return api<SectorServiceItem>(`/admin/sectors/${sectorId}/services/${id}`, {
     method: 'PATCH',
     body: payload,
   })
@@ -55,7 +57,10 @@ export function toggleSectorServiceActive(
   sectorId: string,
   id: string,
 ): Promise<SectorServiceItem> {
-  return api<SectorServiceItem>(`/sectors/${sectorId}/services/${id}/toggle-active`, {
-    method: 'PATCH',
-  })
+  return api<SectorServiceItem>(
+    `/admin/sectors/${sectorId}/services/${id}/toggle-active`,
+    {
+      method: 'PATCH',
+    },
+  )
 }

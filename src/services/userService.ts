@@ -20,21 +20,21 @@ function buildQuery(params: UsersQuery): string {
 }
 
 export function getUsers(params: UsersQuery = {}): Promise<PaginatedUsers> {
-  return api<PaginatedUsers>(`/users${buildQuery(params)}`)
+  return api<PaginatedUsers>(`/admin/users${buildQuery(params)}`)
 }
 
 export function getUser(id: string): Promise<User> {
-  return api<User>(`/users/${id}`)
+  return api<User>(`/admin/users/${id}`)
 }
 
 export function createUser(payload: CreateUserPayload): Promise<User> {
-  return api<User>('/users', { method: 'POST', body: payload })
+  return api<User>('/admin/users', { method: 'POST', body: payload })
 }
 
 export function updateUser(id: string, payload: UpdateUserPayload): Promise<User> {
-  return api<User>(`/users/${id}`, { method: 'PATCH', body: payload })
+  return api<User>(`/admin/users/${id}`, { method: 'PATCH', body: payload })
 }
 
 export function toggleUserActive(id: string): Promise<User> {
-  return api<User>(`/users/${id}/toggle-active`, { method: 'PATCH' })
+  return api<User>(`/admin/users/${id}/toggle-active`, { method: 'PATCH' })
 }

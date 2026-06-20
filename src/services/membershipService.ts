@@ -23,21 +23,21 @@ export function getMemberships(
   sectorId: string,
   params: MembershipsQuery = {},
 ): Promise<PaginatedMemberships> {
-  return api<PaginatedMemberships>(`/sectors/${sectorId}/members${buildQuery(params)}`)
+  return api<PaginatedMemberships>(`/admin/sectors/${sectorId}/members${buildQuery(params)}`)
 }
 
 export function getMembership(
   sectorId: string,
   id: string,
 ): Promise<SectorMembership> {
-  return api<SectorMembership>(`/sectors/${sectorId}/members/${id}`)
+  return api<SectorMembership>(`/admin/sectors/${sectorId}/members/${id}`)
 }
 
 export function createMembership(
   sectorId: string,
   payload: CreateMembershipPayload,
 ): Promise<SectorMembership> {
-  return api<SectorMembership>(`/sectors/${sectorId}/members`, {
+  return api<SectorMembership>(`/admin/sectors/${sectorId}/members`, {
     method: 'POST',
     body: payload,
   })
@@ -48,12 +48,12 @@ export function updateMembership(
   id: string,
   payload: UpdateMembershipPayload,
 ): Promise<SectorMembership> {
-  return api<SectorMembership>(`/sectors/${sectorId}/members/${id}`, {
+  return api<SectorMembership>(`/admin/sectors/${sectorId}/members/${id}`, {
     method: 'PATCH',
     body: payload,
   })
 }
 
 export function removeMembership(sectorId: string, id: string): Promise<void> {
-  return api<void>(`/sectors/${sectorId}/members/${id}`, { method: 'DELETE' })
+  return api<void>(`/admin/sectors/${sectorId}/members/${id}`, { method: 'DELETE' })
 }

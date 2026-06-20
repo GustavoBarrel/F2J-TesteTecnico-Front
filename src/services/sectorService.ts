@@ -22,28 +22,30 @@ function buildQuery(params: SectorsQuery): string {
 }
 
 export function getSectors(params: SectorsQuery = {}): Promise<PaginatedSectors> {
-  return api<PaginatedSectors>(`/sectors${buildQuery(params)}`)
+  return api<PaginatedSectors>(`/admin/sectors${buildQuery(params)}`)
 }
 
 export function getSector(id: string): Promise<Sector> {
-  return api<Sector>(`/sectors/${id}`)
+  return api<Sector>(`/admin/sectors/${id}`)
 }
 
 export function createSector(payload: CreateSectorPayload): Promise<Sector> {
-  return api<Sector>('/sectors', { method: 'POST', body: payload })
+  return api<Sector>('/admin/sectors', { method: 'POST', body: payload })
 }
 
 export function updateSector(id: string, payload: UpdateSectorPayload): Promise<Sector> {
-  return api<Sector>(`/sectors/${id}`, { method: 'PATCH', body: payload })
+  return api<Sector>(`/admin/sectors/${id}`, { method: 'PATCH', body: payload })
 }
 
 export function toggleSectorActive(id: string): Promise<Sector> {
-  return api<Sector>(`/sectors/${id}/toggle-active`, { method: 'PATCH' })
+  return api<Sector>(`/admin/sectors/${id}/toggle-active`, { method: 'PATCH' })
 }
 
 export function getAvailableUsers(
   sectorId: string,
   params: AvailableUsersQuery = {},
 ): Promise<PaginatedAvailableUsers> {
-  return api<PaginatedAvailableUsers>(`/sectors/${sectorId}/available-users${buildQuery(params)}`)
+  return api<PaginatedAvailableUsers>(
+    `/admin/sectors/${sectorId}/available-users${buildQuery(params)}`,
+  )
 }

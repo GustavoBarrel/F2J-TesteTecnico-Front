@@ -128,8 +128,8 @@ export function sendMessage(
   })
 }
 
-export function getHistory(id: string): Promise<RequestHistoryEntry[]> {
-  return api<RequestHistoryEntry[]>(`/requests/${id}/history`)
+export function getAdminRequestHistory(id: string): Promise<RequestHistoryEntry[]> {
+  return api<RequestHistoryEntry[]>(`/admin/requests/${id}/history`)
 }
 
 export function getSectorServicesOptions(): Promise<SectorWithServicesOption[]> {
