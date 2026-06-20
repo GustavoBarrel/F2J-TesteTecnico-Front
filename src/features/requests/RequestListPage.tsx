@@ -25,6 +25,7 @@ const STATUS_OPTIONS = [
   { value: 'NEW', label: 'Nova' },
   { value: 'PENDING', label: 'Pendente' },
   { value: 'IN_PROGRESS', label: 'Em andamento' },
+  { value: 'SOLVED', label: 'Solucionado' },
   { value: 'COMPLETED', label: 'Concluída' },
   { value: 'CANCELLED', label: 'Cancelada' },
   { value: 'ARCHIVED', label: 'Arquivada' },

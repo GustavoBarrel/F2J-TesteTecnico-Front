@@ -1,6 +1,6 @@
 import { Building2, Search } from 'lucide-react'
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { PageHeader } from '../../components/layout/PageHeader'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
@@ -17,12 +17,14 @@ import type {
   RequestStatus,
 } from '../../types/request.types'
 import { RequestPriorityBadge, RequestStatusBadge } from './RequestBadges'
+import { filterAssignedActiveRequests } from '../home/homeUtils'
 
 const STATUS_OPTIONS = [
   { value: '', label: 'Todos os status' },
   { value: 'NEW', label: 'Nova' },
   { value: 'PENDING', label: 'Pendente' },
   { value: 'IN_PROGRESS', label: 'Em andamento' },
+  { value: 'SOLVED', label: 'Solucionado' },
   { value: 'COMPLETED', label: 'Concluída' },
   { value: 'CANCELLED', label: 'Cancelada' },
   { value: 'ARCHIVED', label: 'Arquivada' },
@@ -44,6 +46,7 @@ const dateFormatter = new Intl.DateTimeFormat('pt-BR', {
 
 export function SectorRequestsPage() {
   const { sectorId } = useParams<{ sectorId: string }>()
+  const [searchParams] = useSearchParams()
   const { showToast } = useToast()
 
   const [sectorName, setSectorName] = useState('')
@@ -56,7 +59,8 @@ export function SectorRequestsPage() {
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
   const [priorityFilter, setPriorityFilter] = useState('')
-  const [queueOnly, setQueueOnly] = useState(false)
+  const [queueOnly, setQueueOnly] = useState(searchParams.get('fila') === '1')
+  const [assignedOnly, setAssignedOnly] = useState(searchParams.get('andamento') === '1')
 
   useEffect(() => {
     if (!sectorId) return
@@ -78,14 +82,17 @@ export function SectorRequestsPage() {
         search: search || undefined,
         scope: queueOnly ? 'queue' : undefined,
       })
-      setRequests(res.data)
-      setTotalPages(res.meta.totalPages)
+      const data = assignedOnly
+        ? filterAssignedActiveRequests(res.data)
+        : res.data
+      setRequests(data)
+      setTotalPages(assignedOnly ? 1 : res.meta.totalPages)
     } catch (err) {
       if (isApiError(err)) showToast(err.message)
     } finally {
       setIsLoading(false)
     }
-  }, [sectorId, page, statusFilter, priorityFilter, search, queueOnly, showToast])
+  }, [sectorId, page, statusFilter, priorityFilter, search, queueOnly, assignedOnly, showToast])
 
   useEffect(() => {
     void load()
@@ -153,17 +160,75 @@ export function SectorRequestsPage() {
                 }}
               />
             </div>
-            <label className="flex cursor-pointer items-center gap-2 text-sm text-text-muted">
+            <label
+              className={[
+                'flex cursor-pointer items-center gap-3 rounded-lg border px-3 py-2 transition-colors',
+                queueOnly
+                  ? 'border-accent bg-accent/5 text-primary'
+                  : 'border-border bg-surface text-text-muted hover:border-accent/40 hover:bg-secondary/30',
+              ].join(' ')}
+            >
               <input
                 type="checkbox"
                 checked={queueOnly}
                 onChange={(e) => {
                   setQueueOnly(e.target.checked)
+                  if (e.target.checked) setAssignedOnly(false)
                   setPage(1)
                 }}
-                className="h-4 w-4 rounded border-border accent-primary"
+                className="sr-only"
               />
-              Apenas fila (sem atribuído)
+              <span
+                className={[
+                  'relative h-5 w-9 shrink-0 rounded-full transition-colors',
+                  queueOnly ? 'bg-accent' : 'bg-border',
+                ].join(' ')}
+                aria-hidden="true"
+              >
+                <span
+                  className={[
+                    'absolute top-0.5 h-4 w-4 rounded-full bg-white shadow-sm transition-transform',
+                    queueOnly ? 'translate-x-4' : 'translate-x-0.5',
+                  ].join(' ')}
+                />
+              </span>
+              <span className="font-medium">Apenas fila</span>
+              <span className="text-xs text-text-muted">(sem atribuído)</span>
+            </label>
+            <label
+              className={[
+                'flex cursor-pointer items-center gap-3 rounded-lg border px-3 py-2 transition-colors',
+                assignedOnly
+                  ? 'border-accent bg-accent/5 text-primary'
+                  : 'border-border bg-surface text-text-muted hover:border-accent/40 hover:bg-secondary/30',
+              ].join(' ')}
+            >
+              <input
+                type="checkbox"
+                checked={assignedOnly}
+                onChange={(e) => {
+                  setAssignedOnly(e.target.checked)
+                  if (e.target.checked) setQueueOnly(false)
+                  setPage(1)
+                }}
+                className="sr-only"
+              />
+              <span
+                className={[
+                  'relative h-5 w-9 shrink-0 rounded-full transition-colors',
+                  assignedOnly ? 'bg-accent' : 'bg-border',
+                ].join(' ')}
+                aria-hidden="true"
+              >
+                <span
+                  className={[
+                    'absolute top-0.5 h-4 w-4 rounded-full bg-white shadow-sm transition-transform',
+                    assignedOnly ? 'translate-x-4' : 'translate-x-0.5',
+                  ].join(' ')}
+                />
+              </span>
+              <span className="font-medium">Em andamento</span>
+              <span className="text-xs text-text-muted">(com responsável)</span>
             </label>
           </div>
         </div>

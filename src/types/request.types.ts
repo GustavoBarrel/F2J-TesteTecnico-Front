@@ -4,6 +4,7 @@ export type RequestStatus =
   | 'NEW'
   | 'PENDING'
   | 'IN_PROGRESS'
+  | 'SOLVED'
   | 'COMPLETED'
   | 'CANCELLED'
   | 'ARCHIVED'
@@ -21,8 +22,11 @@ export interface RequestUserSummary {
 export interface RequestPermissions {
   canView: boolean
   canEdit: boolean
+  canMessage: boolean
   canArchive: boolean
   canManageObservers: boolean
+  canChangeStatus: boolean
+  canReviewSolution: boolean
 }
 
 export type RequestParticipationRole = 'CREATOR' | 'OBSERVER'
@@ -72,7 +76,11 @@ export interface UpdateRequestPayload {
 }
 
 export interface ChangeStatusPayload {
-  status: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED'
+  status: 'PENDING' | 'IN_PROGRESS' | 'SOLVED'
+}
+
+export interface SolutionReviewPayload {
+  approved: boolean
 }
 
 export interface RequestMessage {
@@ -125,6 +133,11 @@ export interface RequestDetail extends Request {
   history: RequestHistoryEntry[]
 }
 
+export interface RequestMessagesQuery {
+  page?: number
+  limit?: number
+}
+
 export interface RequestsQuery {
   page?: number
   limit?: number
@@ -143,6 +156,11 @@ export interface SectorRequestsQuery {
 
 export interface PaginatedRequests {
   data: Request[]
+  meta: PaginatedMeta
+}
+
+export interface PaginatedRequestMessages {
+  data: RequestMessage[]
   meta: PaginatedMeta
 }
 
@@ -196,6 +214,7 @@ export const REQUEST_STATUS_LABEL: Record<RequestStatus, string> = {
   NEW: 'Nova',
   PENDING: 'Pendente',
   IN_PROGRESS: 'Em andamento',
+  SOLVED: 'Solucionado',
   COMPLETED: 'Concluída',
   CANCELLED: 'Cancelada',
   ARCHIVED: 'Arquivada',

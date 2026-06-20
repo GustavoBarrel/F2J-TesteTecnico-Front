@@ -2,12 +2,15 @@ import { api } from './api'
 import type {
   AssignPayload,
   ChangeStatusPayload,
+  SolutionReviewPayload,
   CreateRequestPayload,
+  PaginatedRequestMessages,
   PaginatedRequests,
   Request,
   RequestDetail,
   RequestHistoryEntry,
   RequestMessage,
+  RequestMessagesQuery,
   RequestsQuery,
   SectorMemberOption,
   ObserverOption,
@@ -30,13 +33,17 @@ function buildQuery(
 type AssignPayloadAlias = AssignPayload
 
 export function getMyRequests(params: RequestsQuery = {}): Promise<PaginatedRequests> {
-  return api<PaginatedRequests>(`/me/requests${buildQuery(params)}`)
+  return api<PaginatedRequests>(
+    `/me/requests${buildQuery(params as Record<string, string | number | boolean | undefined>)}`,
+  )
 }
 
 export function getAssignedRequests(
   params: RequestsQuery = {},
 ): Promise<PaginatedRequests> {
-  return api<PaginatedRequests>(`/me/requests/assigned${buildQuery(params)}`)
+  return api<PaginatedRequests>(
+    `/me/requests/assigned${buildQuery(params as Record<string, string | number | boolean | undefined>)}`,
+  )
 }
 
 export function getSectorRequests(
@@ -70,6 +77,16 @@ export function changeRequestStatus(
   return api<Request>(`/requests/${id}/status`, { method: 'PATCH', body: payload })
 }
 
+export function reviewSolution(
+  id: string,
+  payload: SolutionReviewPayload,
+): Promise<Request> {
+  return api<Request>(`/requests/${id}/solution-review`, {
+    method: 'PATCH',
+    body: payload,
+  })
+}
+
 export function assignRequest(
   id: string,
   payload: AssignPayloadAlias,
@@ -92,8 +109,13 @@ export function archiveRequest(id: string): Promise<Request> {
   return api<Request>(`/requests/${id}/archive`, { method: 'PATCH' })
 }
 
-export function getMessages(id: string): Promise<RequestMessage[]> {
-  return api<RequestMessage[]>(`/requests/${id}/messages`)
+export function getMessages(
+  id: string,
+  params: RequestMessagesQuery = {},
+): Promise<PaginatedRequestMessages> {
+  return api<PaginatedRequestMessages>(
+    `/requests/${id}/messages${buildQuery(params as Record<string, string | number | boolean | undefined>)}`,
+  )
 }
 
 export function sendMessage(

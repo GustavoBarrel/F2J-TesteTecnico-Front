@@ -1,4 +1,4 @@
-import { Building2, Home, LogOut, Menu, Moon, Sun, Users, X } from 'lucide-react'
+import { Building2, Home, LogOut, Menu, Moon, Sun, Timer, Users, X } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { NavLink } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
@@ -18,6 +18,12 @@ export function Sidebar() {
         ? [
             { to: '/usuarios', label: 'Usuários', icon: Users, end: false },
             { to: '/setores', label: 'Setores', icon: Building2, end: false },
+            {
+              to: '/configuracoes/auto-conclusao',
+              label: 'Auto-conclusão',
+              icon: Timer,
+              end: false,
+            },
           ]
         : []),
     ],

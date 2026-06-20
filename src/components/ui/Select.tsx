@@ -9,10 +9,11 @@ interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
   label: string
   options: SelectOption[]
   error?: string
+  hint?: string
   hideLabel?: boolean
 }
 
-export function Select({ label, options, error, id, className = '', hideLabel = false, ...props }: SelectProps) {
+export function Select({ label, options, error, hint, id, className = '', hideLabel = false, ...props }: SelectProps) {
   const selectId = id ?? props.name
 
   return (
@@ -41,6 +42,7 @@ export function Select({ label, options, error, id, className = '', hideLabel = 
           </option>
         ))}
       </select>
+      {hint && !error ? <p className="text-xs text-text-muted">{hint}</p> : null}
       {error ? <p className="text-xs text-danger">{error}</p> : null}
     </div>
   )

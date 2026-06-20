@@ -41,7 +41,7 @@ export function Modal({ open, title, onClose, children, size = 'md' }: ModalProp
         aria-modal="true"
         aria-labelledby="modal-title"
         className={[
-          'relative z-10 max-h-[90dvh] w-full overflow-y-auto rounded-xl border border-border bg-surface shadow-xl',
+          'scrollbar-subtle relative z-10 max-h-[90dvh] w-full overflow-y-auto rounded-xl border border-border bg-surface shadow-xl',
           size === 'lg' ? 'max-w-2xl' : 'max-w-lg',
         ].join(' ')}
       >

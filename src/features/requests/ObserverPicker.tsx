@@ -6,30 +6,41 @@ import * as requestService from '../../services/requestService'
 import { useToast } from '../../contexts/ToastContext'
 import type { ObserverOption } from '../../types/request.types'
 
+const EMPTY_KNOWN_USERS: ObserverOption[] = []
+
 interface ObserverPickerProps {
   value: string[]
   onChange: (ids: string[]) => void
   knownUsers?: ObserverOption[]
 }
 
-export function ObserverPicker({ value, onChange, knownUsers = [] }: ObserverPickerProps) {
+export function ObserverPicker({ value, onChange, knownUsers }: ObserverPickerProps) {
+  const resolvedKnownUsers = knownUsers ?? EMPTY_KNOWN_USERS
   const { showToast } = useToast()
   const [search, setSearch] = useState('')
   const [options, setOptions] = useState<ObserverOption[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [userCache, setUserCache] = useState<Map<string, ObserverOption>>(
-    () => new Map(knownUsers.map((u) => [u.id, u])),
+    () => new Map(resolvedKnownUsers.map((u) => [u.id, u])),
   )
 
   const selected = useMemo(() => new Set(value), [value])
 
   useEffect(() => {
+    if (resolvedKnownUsers.length === 0) return
+
     setUserCache((prev) => {
+      let changed = false
       const next = new Map(prev)
-      for (const user of knownUsers) next.set(user.id, user)
-      return next
+      for (const user of resolvedKnownUsers) {
+        if (prev.get(user.id) !== user) {
+          next.set(user.id, user)
+          changed = true
+        }
+      }
+      return changed ? next : prev
     })
-  }, [knownUsers])
+  }, [resolvedKnownUsers])
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -96,7 +107,7 @@ export function ObserverPicker({ value, onChange, knownUsers = [] }: ObserverPic
       ) : displayUsers.length === 0 ? (
         <p className="text-sm text-text-muted">Nenhum usuário encontrado.</p>
       ) : (
-        <div className="flex max-h-48 flex-col gap-1 overflow-y-auto rounded-lg border border-border p-2">
+        <div className="scrollbar-subtle flex max-h-48 flex-col gap-1 overflow-y-auto rounded-lg border border-border p-2">
           {displayUsers.map((user) => (
             <label
               key={user.id}

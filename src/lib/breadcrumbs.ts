@@ -63,3 +63,8 @@ export function sectorRequestsBreadcrumbs(sectorName: string): BreadcrumbItem[] 
 export function requestDetailBreadcrumbs(title: string): BreadcrumbItem[] {
   return [homeBreadcrumb, { label: title || '...' }]
 }
+
+export const requestAutoCompleteSettingsBreadcrumbs: BreadcrumbItem[] = [
+  homeBreadcrumb,
+  { label: 'Auto-conclusão' },
+]

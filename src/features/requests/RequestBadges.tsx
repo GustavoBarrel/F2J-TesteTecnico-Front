@@ -14,6 +14,7 @@ const STATUS_VARIANT: Record<RequestStatus, BadgeVariant> = {
   NEW: 'primary',
   PENDING: 'warning',
   IN_PROGRESS: 'info',
+  SOLVED: 'success',
   COMPLETED: 'success',
   CANCELLED: 'danger',
   ARCHIVED: 'neutral',
