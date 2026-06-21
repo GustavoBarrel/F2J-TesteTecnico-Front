@@ -18,6 +18,28 @@ export interface SignInResponse {
   access_token: string
 }
 
+export interface PasswordResetRequestPayload {
+  username?: string
+  email?: string
+}
+
+export interface PasswordResetRequestResponse {
+  sent: boolean
+  message: string
+}
+
+export interface PasswordResetConfirmPayload {
+  username?: string
+  email?: string
+  code: string
+  password: string
+  passwordConfirmation: string
+}
+
+export interface PasswordResetConfirmResponse {
+  message: string
+}
+
 export interface PaginatedMeta {
   page: number
   limit: number

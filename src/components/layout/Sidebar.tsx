@@ -4,7 +4,7 @@ import { NavLink } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
 import { useDarkMode } from '../../contexts/DarkModeContext'
 import { Button } from '../ui/Button'
-import { LogoPlaceholder } from '../ui/LogoPlaceholder'
+import { Logo } from '../ui/Logo'
 
 export function Sidebar() {
   const { user, logout } = useAuth()
@@ -59,13 +59,9 @@ export function Sidebar() {
             : 'max-xl:pointer-events-none max-xl:-translate-x-full',
         ].join(' ')}
       >
-        <div className="flex items-center justify-between border-b border-white/10 p-3 xl:p-4">
-          <div className="flex items-center gap-2.5 xl:gap-3">
-            <LogoPlaceholder className="h-8 w-8 xl:h-9 xl:w-9" />
-            <div className="text-left">
-              <p className="text-sm font-semibold leading-tight">ServiceHub</p>
-              <p className="hidden text-xs text-white/70 sm:block">Central de Serviços</p>
-            </div>
+        <div className="flex items-center justify-between border-b border-white/10 px-3 py-4 xl:px-4 xl:py-5">
+          <div className="min-w-0 flex-1">
+            <Logo className="mx-auto w-full" />
           </div>
           <button
             type="button"

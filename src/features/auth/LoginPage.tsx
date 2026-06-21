@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
 import { useToast } from '../../contexts/ToastContext'
 import {
@@ -9,7 +9,7 @@ import {
 import { isApiError } from '../../services/api'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
-import { LogoPlaceholder } from '../../components/ui/LogoPlaceholder'
+import { Logo } from '../../components/ui/Logo'
 
 export function LoginPage() {
   const { login } = useAuth()
@@ -72,9 +72,8 @@ export function LoginPage() {
     <div className="flex min-h-dvh items-center justify-center bg-secondary px-4 py-8">
       <div className="w-full max-w-md rounded-xl border border-border bg-surface p-6 shadow-sm lg:p-8">
         <div className="mb-8 flex flex-col items-center text-center">
-          <LogoPlaceholder className="mb-4 h-12 w-24" />
-          <h1 className="text-2xl font-semibold text-primary">ServiceHub</h1>
-          <p className="mt-2 text-sm text-text-muted">
+          <Logo className="mb-4 w-full max-w-[17rem] sm:max-w-[19rem]" />
+          <p className="text-sm text-text-muted">
             Acesse a central de serviços da sua empresa
           </p>
         </div>
@@ -106,6 +105,12 @@ export function LoginPage() {
           <Button type="submit" fullWidth disabled={isSubmitting}>
             {isSubmitting ? 'Entrando...' : 'Entrar'}
           </Button>
+
+          <p className="text-center text-sm">
+            <Link to="/recuperar-senha" className="font-medium text-accent hover:underline">
+              Esqueci minha senha
+            </Link>
+          </p>
         </form>
       </div>
     </div>

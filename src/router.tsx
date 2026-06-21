@@ -4,6 +4,7 @@ import { PrivateRoute } from './components/auth/PrivateRoute'
 import { PublicRoute } from './components/auth/PublicRoute'
 import { AppLayout } from './components/layout/AppLayout'
 import { LoginPage } from './features/auth/LoginPage'
+import { ForgotPasswordPage } from './features/auth/ForgotPasswordPage'
 import { HomePage } from './features/home/HomePage'
 import { UsersPage } from './features/users/UsersPage'
 import { SectorsPage } from './features/sectors/SectorsPage'
@@ -20,7 +21,10 @@ import { RequestAutoCompleteSettingsPage } from './features/settings/RequestAuto
 export const router = createBrowserRouter([
   {
     element: <PublicRoute />,
-    children: [{ path: '/login', element: <LoginPage /> }],
+    children: [
+      { path: '/login', element: <LoginPage /> },
+      { path: '/recuperar-senha', element: <ForgotPasswordPage /> },
+    ],
   },
   {
     element: <PrivateRoute />,
